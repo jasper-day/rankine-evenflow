@@ -1,0 +1,698 @@
+; Aerodynamic Model after Stevens Aircraft Control and Simulation, Chap. 8.5
+; "Medium fidelity" model with:
+; - Simple treatment of stall effects (linear lift before and after stall)
+; - Individual treatment of wing as left and right panels
+; - Individual treatment of elevator and rudder
+; - Prop wash over wings, fuselage, and empennage (REMOVED)
+; - Wing downwash over empennage
+; - Control surfaces accounted for as a change in angle
+; - Fuselage drag along three axes
+; Paper cuts:
+; Forces are applied at the center of gravity, rather than using AERORP,
+; therefore model must have AERORP equal to the center of gravity
+; Author: Jasper Day
+
+; Wing parameters
+
+(def "x loc of the wing AC, bf, %MAC"
+  aero/quantity/x_w-bf
+  0.12)
+
+(def "y loc of the right wing AC, bf, %MAC"
+  aero/quantity/y_rw-bf
+  ; Located at the geometric center of the wing
+  1.74)
+
+(def "y loc of the left wing AC, bf"
+  aero/quantity/y_lw-bf
+  ; Located at the geometric center of the wing
+  (* -1.0 aero/quantity/y_rw-bf))
+  
+(def "z loc of the wing AC, bf, %MAC" 
+  aero/quantity/z_w-bf
+  -0.05)
+
+(def "Zero lift drag coefficient" aero/coefficients/CD0_w
+  ; See Notion
+  0.0118)
+
+(def "Main wing drag polar" aero/coefficients/k_w
+  ; See Notion
+  0.0464)
+
+(def "tau_a" aero/quantity/aileron-effectiveness
+  ; TODO: determine this
+  0.4)
+     
+(def "prop wash over the wing" aero/velocity/prop-wing-vi-fps
+  (* 0.0 ; eta_w
+     propulsion/engine/prop-induced-velocity_fps))
+
+; After 8.5-5, 8.5-6
+
+(def "Right wing lift coefficient" aero/coefficients/CL_rw
+  ; We will assume no zero-lift coefficient, but rotate the wing 
+  ; in the model to reflect the accurate zero-lift coefficient
+  ; Sharp changes at stall could be improved
+  (table aero/table/CL_rw_alpha
+    (row aero/calculated/alpha_rw-rad)
+    [-1.57 0,
+    -0.21305 -1.05,
+    0.21305 1.05,
+    1.57 0]))
+
+(def "Left wing lift coefficient" aero/coefficients/CL_lw
+  ; We will assume no zero-lift coefficient, but rotate the wing 
+  ; in the model to reflect the accurate zero-lift coefficient
+  ; Sharp changes at stall could be improved
+  (table aero/table/CL_lw_alpha
+    (row aero/calculated/alpha_lw-rad)
+    [-1.57 0,
+    -0.21305 -1.05,
+    0.21305 1.05,
+    1.57 0]))
+
+; =========================================================================
+; Horizontal tail parameters
+
+(def "x loc of htail center" aero/quantity/x_ht-bf
+  ; rough OpenVSP calculation
+  -3.83)
+
+; tail assumed coincident with y-axis
+
+(def "z loc of htail center" aero/quantity/z_ht-bf
+  0.0)
+
+(def "H tail zero lift drag coefficient" aero/coefficients/CD0_ht
+  ; source: Notion
+  0.0136)
+
+(def "H tail induced drag coefficient" aero/coefficients/k_ht
+  ; source: OpenVSP
+  0.0513)
+
+(def "Flap effectiveness of elevator" aero/quantity/elevator-effectiveness
+  ; TODO: find this actual number
+  0.5)
+
+(def "Effect of wing downwash on tail" aero/quantity/wing-ht-effectiveness
+  ; TODO: find this actual number
+  0.8)
+
+(def "prop wash over hstab" aero/velocity/prop-ht-vi-fps
+  (* 0.0 ; better approximation to this number? Stevens says higher
+    propulsion/engine/prop-induced-velocity_fps))
+    
+(def "Horizontal tail lift coefficient" aero/coefficients/CL_ht
+  ; We will assume no zero-lift coefficient, but rotate the wing 
+  ; in the model to reflect the accurate zero-lift coefficient
+  ; Sharp changes at stall could be improved
+  (table aero/table/CL_ht_alpha
+    (row aero/calculated/alpha_ht-rad)
+    [-1.57 0,
+    -0.205 -1.0,
+    0.205 1.0,
+    1.57 0]))
+    
+; =========================================================================
+; Vertical tail parameters
+
+(def "x loc of vtail center" aero/quantity/x_vt-bf
+  ; TODO: determine exact quantity, %MAC
+  -3.83)
+
+; tail assumed coincident with y-axis
+
+(def "z loc of vtail center" aero/quantity/z_vt-bf
+  ; TODO: determine exact quantity, %MAC
+  -1.52)
+
+(def "V tail zero lift drag coefficient" aero/coefficients/CD0_vt
+  ; source: Notion
+  0.0136)
+
+(def "V tail induced drag coefficient" aero/coefficients/k_vt
+  ; source: theory, e = 0.9
+  0.101)
+
+(def "Flap effectiveness of rudder" aero/quantity/rudder-effectiveness
+  ; TODO: find this actual number for our design
+  0.7)
+
+(def "prop wash over vstab" aero/velocity/prop-vt-vi-fps
+  (* 0.0 ; Stevens says higher!
+    propulsion/engine/prop-induced-velocity_fps))
+
+(def "Vertical tail lift coefficient" aero/coefficients/CL_vt
+  ; Sharp changes at stall could be improved
+  ; TODO: vertical tail lift curve slope calculation
+  (table aero/table/CL_vt_alpha
+    (row aero/calculated/alpha_vt-rad)
+    [-1.57 0,
+    -0.205 -1.0,
+    0.205 1.0,
+    1.57 0]))
+
+; =========================================================================
+; Fuselage
+
+(def "Fuselage X-axis force coefficient" aero/quantity/X_fus-uu-ft2
+  ; TODO find this (given by frontal area * drag coefficient)
+  0.575)
+
+(def "Fuselage Y-axis force coefficient" aero/quantity/Y_fus-vv-ft2
+  ; TODO find this (side area)
+  2.0)
+
+(def "Fuselage Z-axis force coefficient" aero/quantity/Z_fus-ww-ft2
+  ; TODO find this (top area)
+  2.0)
+
+(def "Fuselage X-axis centroid" aero/quantity/x_fus-bf-ft
+  ; TODO find this
+  0.0)
+  
+(def "Fuselage Y-axis centroid" aero/quantity/y_fus-bf-ft
+  ; TODO find this
+  0.0)
+  
+(def "Fuselage Z-axis centroid" aero/quantity/z_fus-bf-ft
+  ; TODO find this
+  0.0)
+
+; Fuselage velocity
+; 8.5-21
+(def "Fuselage u velocity" aero/velocity/fus-u-fps
+  (+ velocities/u-aero-fps
+     (* 0.0 propulsion/engine/prop-induced-velocity_fps)))
+
+; =========================================================================
+; Calculated dimensional quantities
+
+; Main wing
+(def aero/quantity/x_w-bf-ft
+  (* aero/quantity/x_w-bf
+     metrics/cbarw-ft))
+
+(def aero/quantity/y_rw-bf-ft
+  (* aero/quantity/y_rw-bf
+     metrics/cbarw-ft))
+
+(def aero/quantity/y_lw-bf-ft
+  (* aero/quantity/y_lw-bf
+     metrics/cbarw-ft))
+
+(def aero/quantity/z_w-bf-ft
+  (* aero/quantity/z_w-bf
+     metrics/cbarw-ft))
+
+; Horizontal tail
+
+(def aero/quantity/x_ht-bf-ft
+  (* aero/quantity/x_ht-bf
+     metrics/cbarw-ft))
+
+(def aero/quantity/z_ht-bf-ft
+  (* aero/quantity/z_ht-bf
+     metrics/cbarw-ft))
+
+; Vertical Tail
+
+(def aero/quantity/x_vt-bf-ft
+  (* aero/quantity/x_vt-bf
+     metrics/cbarw-ft))
+
+(def aero/quantity/z_vt-bf-ft
+  (* aero/quantity/z_vt-bf
+     metrics/cbarw-ft))
+
+; =========================================================================
+; Main wing calculations
+
+; Velocity calculations per Stevens 8.5-1
+
+(def "Axial velocity at right wing" aero/velocity/U_rw-fps
+  (+ velocities/u-aero-fps
+     (* velocities/q-aero-rad_sec
+        aero/quantity/z_w-bf-ft)
+     (* -1.0
+        velocities/r-aero-rad_sec
+        aero/quantity/y_rw-bf-ft)
+     aero/velocity/prop-wing-vi-fps))
+
+(def "Axial velocity at left wing" aero/velocity/U_lw-fps
+  (+ velocities/u-aero-fps
+     (* velocities/q-aero-rad_sec
+        aero/quantity/z_w-bf-ft)
+     (* -1.0
+        velocities/r-aero-rad_sec
+        aero/quantity/y_lw-bf-ft)
+     aero/velocity/prop-wing-vi-fps))
+
+(def "Side velocity at either wing" aero/velocity/V_w-fps
+  (+ velocities/v-aero-fps
+     (* velocities/r-aero-rad_sec
+        aero/quantity/x_w-bf-ft)
+     (* -1.0
+        velocities/p-aero-rad_sec
+        aero/quantity/z_w-bf-ft)))
+
+(def "Normal velocity at right wing" aero/velocity/W_rw-fps
+  (+ velocities/w-aero-fps
+    (* velocities/p-aero-rad_sec
+       aero/quantity/y_rw-bf-ft)
+    (* -1.0
+       velocities/q-aero-rad_sec
+       aero/quantity/x_w-bf-ft)))
+
+(def "Normal velocity at left wing" aero/velocity/W_lw-fps
+  (+ velocities/w-aero-fps
+    (* velocities/p-aero-rad_sec
+       aero/quantity/y_lw-bf-ft)
+    (* -1.0
+       velocities/q-aero-rad_sec
+       aero/quantity/x_w-bf-ft)))
+
+; Stevens 8.5-2
+
+(def "Effective dynamic of right wing" aero/calculated/qbarUW_rw-psf
+  (* 0.5
+     atmosphere/rho-slugs_ft3
+     (+ (pow aero/velocity/U_rw-fps 2)
+        (pow aero/velocity/W_rw-fps 2))))
+
+(def "Effective dynamic of left wing" aero/calculated/qbarUW_lw-psf
+  (* 0.5
+     atmosphere/rho-slugs_ft3
+     (+ (pow aero/velocity/U_lw-fps 2)
+        (pow aero/velocity/W_lw-fps 2))))
+
+; Stevens 8.5-3
+
+(def "Angle of attack of right wing panel" aero/calculated/alpha_rw-rad
+  ; need to subtract off zero-lift angle of attack
+  (+ (atan2 aero/velocity/W_rw-fps 
+            aero/velocity/U_rw-fps )
+      (* aero/quantity/aileron-effectiveness
+         fcs/right-aileron-pos-rad)))
+         
+; Stevens 8.5-4
+  
+(def "Angle of attack of left wing panel" aero/calculated/alpha_lw-rad
+  ; need to subtract off zero-lift angle of attack
+  ; No negative sign needed; ailerons individually considered
+  (+ (atan2 aero/velocity/W_lw-fps 
+            aero/velocity/U_lw-fps )
+      (* aero/quantity/aileron-effectiveness
+         fcs/left-aileron-pos-rad)))
+
+
+
+(def "Right wing separation drag coefficient" aero/coefficients/CD-sep_rw
+  ; increase from zero at stall to flat plate drag coefficient
+  (table aero/coefficients/CD-sep_rw_alpha
+    (row aero/calculated/alpha_rw-rad)
+    [-1.57 1,
+    -0.21 0,
+    0.21 0,
+    1.57 1])
+)
+
+(def "Left wing separation drag coefficient" aero/coefficients/CD-sep_lw
+  ; increase from zero at stall to flat plate drag coefficient
+  (table aero/coefficients/CD-sep_lw_alpha
+    (row aero/calculated/alpha_lw-rad)
+    [-1.57 1,
+    -0.21 0,
+    0.21 0,
+    1.57 1])
+)
+
+; Ignore rearward flight (Stevens 8.5-7, 8.5-8)
+; 8.5-9
+
+(def "Right wing drag coefficient" aero/coefficients/CD_rw
+  (+ aero/coefficients/CD0_w
+     (* aero/coefficients/k_w 
+        (pow aero/coefficients/CL_rw 2))
+     aero/coefficients/CD-sep_rw))
+
+(def "Left wing drag coefficient" aero/coefficients/CD_lw
+  (+ aero/coefficients/CD0_w
+     (* aero/coefficients/k_w 
+        (pow aero/coefficients/CL_lw 2))
+     aero/coefficients/CD-sep_lw))
+
+; 8.5-10
+
+(def "Right wing lift" aero/forces/L_rw-lb
+  (* 0.5 ; half wing area
+     aero/coefficients/CL_rw
+     metrics/Sw-sqft
+     aero/calculated/qbarUW_rw-psf))
+
+(def "Left wing lift" aero/forces/L_lw-lb
+  (* 0.5 ; half wing area
+     aero/coefficients/CL_lw
+     metrics/Sw-sqft
+     aero/calculated/qbarUW_lw-psf))
+
+; 8.5-11
+
+(def "Right wing drag" aero/forces/D_rw-lb
+  (* 0.5
+     aero/coefficients/CD_rw
+     metrics/Sw-sqft
+     aero/calculated/qbarUW_rw-psf))
+
+(def "Left wing drag" aero/forces/D_lw-lb
+  (* 0.5
+     aero/coefficients/CD_lw
+     metrics/Sw-sqft
+     aero/calculated/qbarUW_lw-psf))
+
+; 8.5-15
+
+(def "Induced velocity of the wing at the wing" aero/velocity/wing-vi-fps
+  (* (max 0 velocities/u-aero-fps)
+     0.5
+     (+ aero/coefficients/CL_lw
+        aero/coefficients/CL_rw)
+     aero/coefficients/k_w))
+
+; =========================================================================
+; Horizontal tail calculations
+
+; 8.5-14
+
+(def "X velocity at horiz. tail" aero/velocity/U_ht-fps
+  (+ velocities/u-aero-fps
+     (* velocities/q-aero-rad_sec
+        aero/quantity/z_ht-bf-ft)
+      aero/velocity/prop-ht-vi-fps))
+
+(def "Y velocity at horiz tail" aero/velocity/V_ht-fps
+  (+ velocities/v-aero-fps
+     (* velocities/r-aero-rad_sec
+        aero/quantity/x_ht-bf-ft)
+     (* -1.0
+        velocities/p-aero-rad_sec
+        aero/quantity/z_ht-bf-ft)))
+
+(def "Z velocity at horiz tail" aero/velocity/W_ht-fps
+  (+ velocities/w-aero-fps
+     (* -1.0
+        velocities/q-aero-rad_sec
+        aero/quantity/x_ht-bf-ft)
+     (* -1.0
+        aero/velocity/wing-vi-fps
+        aero/quantity/wing-ht-effectiveness)))
+
+; 8.5-16
+
+(def "Effective dynamic pressure at horiz tail" aero/calculated/qbarUW_ht-psf
+  (* atmosphere/rho-slugs_ft3
+     0.5
+     (+ (pow aero/velocity/U_ht-fps 2)
+        (pow aero/velocity/W_ht-fps 2))))
+
+; 8.5-17
+
+(def "Effective angle of attack at horiz tail" aero/calculated/alpha_ht-rad
+  (+ (atan2 aero/velocity/W_ht-fps aero/velocity/U_ht-fps)
+     (* aero/quantity/elevator-effectiveness
+        fcs/elevator-pos-rad)))
+
+; Lift and drag of horizontal tail
+; "Handled in the same manner as for the wing, with different parameter choices"
+
+(def "H tail separation drag coefficient" aero/coefficients/CD-sep_ht
+  ; increase from zero at stall to flat plate drag coefficient
+  (table aero/coefficients/CD-sep_ht_alpha
+    (row aero/calculated/alpha_ht-rad)
+    [-1.57 1,
+    -0.21 0,
+    0.21 0,
+    1.57 1]))
+
+(def "H tail drag coefficient" aero/coefficients/CD_ht
+  (+ aero/coefficients/CD0_ht
+     (* aero/coefficients/k_ht
+        (pow aero/coefficients/CL_ht 2))
+     aero/coefficients/CD-sep_ht))
+
+(def "H tail lift" aero/forces/L_ht-lb
+  (* aero/coefficients/CL_ht
+     metrics/Sh-sqft
+     aero/calculated/qbarUW_ht-psf))
+
+(def "H tail drag" aero/forces/D_ht-lb
+  (* aero/coefficients/CD_ht
+     metrics/Sh-sqft
+     aero/calculated/qbarUW_ht-psf))
+     
+; =========================================================================
+; vertical tail calculations
+
+; 8.5-18
+(def "V tail x velocity" aero/velocity/U_vt-fps
+  (+ velocities/u-aero-fps
+     (* velocities/q-aero-rad_sec
+        aero/quantity/z_vt-bf-ft)
+     aero/velocity/prop-vt-vi-fps))
+
+(def "V tail y velocity" aero/velocity/V_vt-fps
+  (+ velocities/v-aero-fps
+     (* velocities/r-aero-rad_sec
+        aero/quantity/x_vt-bf-ft)
+     (* -1.0
+        velocities/p-aero-rad_sec
+        aero/quantity/z_vt-bf-ft)))
+
+(def "V tail z velocity" aero/velocity/W_vt-fps
+  (+ velocities/w-aero-fps
+     (* -1.0 velocities/q-aero-rad_sec
+        aero/quantity/x_vt-bf-ft)))
+
+; 8.5-19
+(def "Vertical tail dynamic pressure" aero/calculated/qbarUV_vt-psf
+  (* atmosphere/rho-slugs_ft3
+     0.5
+     (+ (pow aero/velocity/U_vt-fps 2)
+        (pow aero/velocity/V_vt-fps 2))))
+
+; 8.5-20
+(def "Vertical tail angle of attack" aero/calculated/alpha_vt-rad
+  (+ (atan2 aero/velocity/V_vt-fps 
+            aero/velocity/U_vt-fps)
+     (* aero/quantity/rudder-effectiveness
+        fcs/rudder-pos-rad)))
+
+; Calculation of aerodynamic forces
+
+(def "V tail separation drag coefficient" aero/coefficients/CD-sep_vt
+  ; increase from zero at stall to flat plate drag coefficient
+  (table aero/coefficients/CD-sep_vt_alpha
+    (row aero/calculated/alpha_vt-rad)
+    [-1.57 1,
+    -0.21 0,
+    0.21 0,
+    1.57 1]))
+
+(def "V tail drag coefficient" aero/coefficients/CD_vt
+  (+ aero/coefficients/CD0_vt
+     (* aero/coefficients/k_vt
+        (pow aero/coefficients/CL_vt 2))
+     aero/coefficients/CD-sep_vt))
+
+(def "V tail lift" aero/forces/L_vt-lb
+  (* aero/coefficients/CL_vt
+     metrics/Sv-sqft
+     aero/calculated/qbarUV_vt-psf))
+
+(def "V tail drag" aero/forces/D_vt-lb
+  (* aero/coefficients/CD_vt
+     metrics/Sv-sqft
+     aero/calculated/qbarUV_vt-psf))
+
+
+; =========================================================================
+; Aerodynamic forces
+; forces automatically applied at AERORP
+; TODO: move the AERORP to the center of gravity
+(axis X
+  ; body x-direction
+  (def "Right wing" aero/forces/X_rw-lb
+    ; Stevens 8.5-12
+    (+ (* 1.0 aero/forces/L_rw-lb
+          (sin aero/calculated/alpha_rw-rad))
+       (* -1.0
+          aero/forces/D_rw-lb
+          (cos aero/calculated/alpha_rw-rad))))
+  (def "Left wing" aero/forces/X_lw-lb
+    ; Stevens 8.5-12, left wing
+    (+ (* 1.0 aero/forces/L_lw-lb
+          (sin aero/calculated/alpha_lw-rad))
+       (* -1.0
+          aero/forces/D_lw-lb
+          (cos aero/calculated/alpha_lw-rad))))
+  ; horizontal tail
+  (def "H tail" aero/forces/X_ht-lb
+    ; Stevens 8.5-12
+    (+ (* 1.0 aero/forces/L_ht-lb
+          (sin aero/calculated/alpha_ht-rad))
+       (* -1.0
+          aero/forces/D_ht-lb
+          (cos aero/calculated/alpha_ht-rad))))
+  ; vertical tail
+  (def "V tail" aero/forces/X_vt-lb
+    ; Stevens 8.5-12
+    (+ (* 1.0 aero/forces/L_vt-lb
+          (sin aero/calculated/alpha_vt-rad))
+       (* -1.0
+          aero/forces/D_vt-lb
+          (cos aero/calculated/alpha_vt-rad))))
+  ; fuselage
+  (def "Fuselage" aero/forces/X_fus-lb
+    (* -0.5
+       atmosphere/rho-slugs_ft3
+       aero/quantity/X_fus-uu-ft2
+       (abs aero/velocity/fus-u-fps)
+       aero/velocity/fus-u-fps))
+)
+
+(axis Y
+  ; body Y-direction
+  ; no effect from main wings (no dihedral)
+  ; effect from tail and fuselage
+  (def "V tail" aero/forces/Y_vt-lb
+    ; Stevens 8.5-12
+    (+ (* 1.0
+          aero/forces/L_vt-lb
+          (cos aero/calculated/alpha_vt-rad))
+       (* 1.0
+          aero/forces/D_vt-lb
+          (sin aero/calculated/alpha_vt-rad))))
+  (def "Fuselage" aero/forces/Y_fus-lb
+    (* 0.5
+       atmosphere/rho-slugs_ft3
+       aero/quantity/Y_fus-vv-ft2
+       (abs velocities/v-aero-fps)
+       velocities/v-aero-fps))
+  )
+
+(axis Z
+  ; body Z-direction
+  (def "Right wing" aero/forces/Z_rw-lb
+    (+ (* -1.0 
+          aero/forces/L_rw-lb
+          (cos aero/calculated/alpha_rw-rad))
+       (* -1.0
+          aero/forces/D_rw-lb
+          (sin aero/calculated/alpha_rw-rad))))
+  ; left wing
+  (def "Left wing" aero/forces/Z_lw-lb
+    (+ (* -1.0 
+          aero/forces/L_lw-lb
+          (cos aero/calculated/alpha_lw-rad))
+       (* -1.0
+          aero/forces/D_lw-lb
+          (sin aero/calculated/alpha_lw-rad))))
+  ; horizontal tail
+  (def "H tail" aero/forces/Z_ht-lb
+    (+ (* -1.0 
+          aero/forces/L_ht-lb
+          (cos aero/calculated/alpha_ht-rad))
+       (* -1.0
+          aero/forces/D_ht-lb
+          (sin aero/calculated/alpha_ht-rad))))
+  (def "Fuselage" aero/forces/Z_fus-lb
+    (* -0.5
+       atmosphere/rho-slugs_ft3
+       aero/quantity/Z_fus-ww-ft2
+       (abs velocities/w-aero-fps)
+       velocities/w-aero-fps))
+)
+
+; aerodynamic moments
+(axis ROLL
+  ; moment about X-axis
+  ; 8.5-13, no side forces
+  (def "Right wing" aero/moments/L_rw-ftlb
+    (* aero/quantity/y_rw-bf-ft
+       aero/forces/Z_rw-lb))
+  (def "Left wing" aero/moments/L_lw-ftlb
+    (* aero/quantity/y_lw-bf-ft
+       aero/forces/Z_lw-lb))
+  ; h tail causes no roll moment (y_ht = 0, Y_ht = 0) 
+  (def "V tail" aero/moments/L_vt-ftlb
+    (* -1.0
+       aero/quantity/z_vt-bf-ft
+       aero/forces/Y_vt-lb))
+  (def "Fuselage" aero/moments/L_fus-ftlb
+    (* -1.0
+       aero/quantity/z_fus-bf-ft
+       aero/forces/Y_fus-lb))
+)
+
+(axis PITCH
+  ; moment about Y-axis
+  ; TODO: add moment coefficient
+  (def "Right wing" aero/moments/M_rw-ftlb
+    (+ 
+      (* -1.0
+         aero/quantity/x_w-bf-ft
+         aero/forces/Z_rw-lb)
+      (* aero/quantity/z_w-bf-ft
+         aero/forces/X_rw-lb)))
+  ; left wing
+  (def "Left wing" aero/moments/M_lw-ftlb
+    (+ 
+      (* -1.0
+         aero/quantity/x_w-bf-ft
+         aero/forces/Z_lw-lb)
+      (* aero/quantity/z_w-bf-ft
+         aero/forces/X_lw-lb)))
+  ; h stab
+  (def "H tail" aero/moments/M_ht-ftlb
+    (+ 
+      (* -1.0
+         aero/quantity/x_ht-bf-ft
+         aero/forces/Z_ht-lb)
+      (* aero/quantity/z_ht-bf-ft
+         aero/forces/X_ht-lb)))
+  ; v stab
+  (def "V tail" aero/moments/M_vt-ftlb
+    (* aero/quantity/z_vt-bf-ft
+       aero/forces/X_vt-lb))
+  ; fuselage
+  (def "Fuselage" aero/moments/M_fus-ftlb
+    (+ (* -1.0
+          aero/quantity/x_fus-bf-ft
+          aero/forces/Z_fus-lb)
+       (* aero/quantity/z_fus-bf-ft
+          aero/forces/X_fus-lb)))
+)
+
+(axis YAW
+  ; moment about Z-axis
+  (def "Right wing" aero/moments/N_rw-ftlb
+    (* -1.0
+       aero/quantity/y_rw-bf-ft
+       aero/forces/X_rw-lb))
+  ; left wing
+  (def "Left wing" aero/moments/N_lw-ftlb
+    (* -1.0
+       aero/quantity/y_lw-bf-ft
+       aero/forces/X_lw-lb))
+  ; h tail causes no yaw moment (y = 0, Y = 0)
+  ; v tail
+  (def "V tail" aero/moments/N_vt-ftlb
+    (* aero/quantity/x_vt-bf-ft
+       aero/forces/Y_vt-lb))
+  ; fuselage
+  (def "Fuselage" aero/moments/N_fus-ftlb
+    (* aero/quantity/x_fus-bf-ft
+       aero/forces/Y_fus-lb))
+)

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<!-- Motor used for Rankine -->
+<brushless_dc_motor name="AT4120_250KV">
+    <velocityconstant units="RPM/V"> 250 </velocityconstant>
+    <coilresistance units="OHMS"> 0.076 </coilresistance>
+    <noloadcurrent units="AMPERES"> 1 </noloadcurrent>
+    <maxvolts units="VOLTS"> 44.4 </maxvolts>
+</brushless_dc_motor>

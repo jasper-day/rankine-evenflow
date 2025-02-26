@@ -1,0 +1,284 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="http://jsbsim.sourceforge.net/JSBSim.xsl"?>
+
+<fdm_config name="EvenFlow" version="2.0" release="ALPHA"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="http://jsbsim.sourceforge.net/JSBSim.xsd">
+
+  <fileheader>
+    <author> Jasper Day </author>
+    <filecreationdate> 2025-02-22 </filecreationdate>
+    <version>0.0.0</version>
+    <description> Models EvenFlow. </description>
+  </fileheader>
+
+  <!--
+  File:     EvenFlow.xml
+  Input parameters:
+    Output directory                   : ./aircraft
+    Create a subdirectory?             : yes
+    Overwrite?                         : yes
+    Aircraft name                      : EvenFlow
+    Use dedicated system files?        : yes
+    Select a system of measurement     : yes # metric
+    Type of aircraft                   : 0
+    Stall speed VS1 (clean, no flaps)  : 36.00 # km/h
+    Maximum takeoff weight             : 8.20 # kg
+    Empty weight                       : 5.00 # kg
+    Inertia Ixx                        : 1.76 # kg m^2
+    Inertia Iyy                        : 2.76 # kg m^2
+    Inertia Izz                        : 1.13 # kg m^2
+    Length                             : 2.00 # m
+    Select a wing shape                : 0 # straight
+    Wing span                          : 3.5 # m, not correct
+    Wing area                          : 1.50
+    Wing aspect ratio                  : 8.16
+    Wing taper ratio                   : 0.42
+    Wing root chord                    : 0.39
+    Wing incidence                     : 0.00
+    Wing dihedral                      : 0.00
+    Wing sweep (quarter chord)         : 0.00
+    Htail area                         : 0.26
+    Htail arm                          : 1.60
+    Vtail area                         : 0.14
+    Vtail arm                          : 1.60
+    Propulsion                         : yes
+    Engine name                        : AT4120_250KV
+    Number of engines                  : 1
+    Engine layout                      : 0
+    Engine type                        : 4
+    Engine power                       : 1.60
+    Maximum engine rpm                 : 12000.00
+    Thruster name                      : APC_15x8E
+    Propeller diameter                 : 0.38
+    Is the propeller fixed pitch?      : yes
+    Landing Gear                       : yes
+    Is landing gear retractable?       : no
+    Nose or tail wheel type            : 1
+    Is this a taildragger?             : no
+    Flaps                              : no
+    Spoilers                           : no
+    Chute                              : no
+
+  Specifications:
+    name:          EvenFlow
+    type:          Single engine Glider, Small Commuter
+    stall speed:   36.00 km/h
+    max weight:    8.20 kg
+    Fuselage: 
+     length:        2.00 m
+     diameter:      1.37 m
+     finess ratio:  1.46
+    wing: 
+     span:         3.00 m
+     area:         1.50 m2
+     mean chord:   0.39 m
+     aspect ratio: 8.16:1
+     taper ratio:  0.42:1
+     incidence:    0.00 degrees
+     dihedral:     0.00 degrees
+     sweep:        0.00 degrees
+     t/c:          4.70 %
+
+    no. engines:   1
+    engine type:   Electric Engine
+    engine layout: forward fuselage
+
+    gear type:     tricycle
+    steering type: castering
+    retractable?:  no
+
+  Outputs:
+    wing loading:       53.62 N/m2
+     - thickness ratio: 4.70%
+    payload:            1.99 kg
+    CL-alpha:           5.38 per radian
+    CL-0:               0.15
+    CL-max:             0.88
+    CD-0:               -nan
+    K:                  0.04
+    Mcrit:              0.70
+
+    min. turn radius    5.63 m
+    max. turn rate:     1.95 deg/s
+-->
+
+  <metrics>
+    <wingarea unit="M2"> 1.50 </wingarea>
+    <wingspan unit="M"> 3.50 </wingspan>
+    <wing_incidence unit="DEG"> 3 </wing_incidence>
+    <chord unit="M"> 0.4287 </chord>
+    <htailarea unit="M2"> 0.26 </htailarea>
+    <htailarm unit="M"> 1.60 </htailarm>
+    <vtailarea unit="M2">0.14 </vtailarea>
+    <vtailarm unit="M"> 1.60 </vtailarm>
+    <location name="AERORP" unit="M">
+      <!-- AERORP at CG for our model to avoid extra moments -->
+      <x> 0.34 </x>
+      <y> 0.00 </y>
+      <z> -0.05 </z>
+    </location>
+    <location name="EYEPOINT" unit="M">
+      <!-- Doesn't matter at all -->
+      <x> 0.26 </x>
+      <y> -0.46 </y>
+      <z> 1.14 </z>
+    </location>
+    <location name="VRP" unit="M">
+      <!-- Standard choice -->
+      <x> 0.0 </x>
+      <y> 0.0 </y>
+      <z> 0.0 </z>
+    </location>
+  </metrics>
+
+  <mass_balance>
+    <ixx unit="KG*M2"> 1.76 </ixx>
+    <iyy unit="KG*M2"> 2.76 </iyy>
+    <izz unit="KG*M2"> 1.13 </izz>
+    <emptywt unit="KG"> 5.00 </emptywt>
+    <location name="CG" unit="M">
+      <!-- Change these numbers to reflect SOLIDWORKS / stability calculations -->
+      <x> 0.34 </x>
+      <y> 0.00 </y>
+      <z> -0.05 </z>
+    </location>
+    <pointmass name="Payload">
+      <weight unit="KG"> 3.2 </weight>
+      <location name="POINTMASS" unit="M">
+        <!-- Payload coincident with CG is OK -->
+        <x> 0.34 </x>
+        <y> 0.00 </y>
+        <z> -0.05 </z>
+      </location>
+    </pointmass>
+  </mass_balance>
+
+  <propulsion>
+
+    <engine file="AT4120_PwrEquiv">
+      <feed> 0 </feed>
+
+      <thruster file="APC_15x8E_8000">
+        <sense> 1 </sense>
+        <location unit="M">
+          <x> 0.00 </x>
+          <y> 0.00 </y>
+          <z> 0.00 </z>
+        </location>
+        <orient unit="DEG">
+          <!-- Could change this to see the effect on P-factor -->
+          <pitch> 0.00 </pitch>
+          <roll> 0.00 </roll>
+          <yaw> 0.00 </yaw>
+        </orient>
+      </thruster>
+    </engine>
+
+  </propulsion>
+
+  <ground_reactions>
+
+    <!-- Need to update these with the locations of the gear 
+ on the actual aircraft -->
+
+  <contact type="BOGEY" name="NOSE">
+      <location unit="M">
+        <x> 0.26 </x>
+        <y> 0.00 </y>
+        <z> -0.24 </z>
+      </location>
+      <static_friction> 0.80 </static_friction>
+      <dynamic_friction> 0.50 </dynamic_friction>
+      <rolling_friction> 0.02 </rolling_friction>
+      <spring_coeff unit="N/M"> 79.16 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 39.58 </damping_coeff>
+      <max_steer unit="DEG"> 360.00 </max_steer>
+      <brake_group> NONE </brake_group>
+      <retractable> 0 </retractable>
+    </contact>
+
+  <contact type="BOGEY" name="LEFT_MAIN">
+      <location unit="M">
+        <x> 0.35 </x>
+        <y> -0.27 </y>
+        <z> -0.24 </z>
+      </location>
+      <static_friction> 0.80 </static_friction>
+      <dynamic_friction> 0.50 </dynamic_friction>
+      <rolling_friction> 0.02 </rolling_friction>
+      <spring_coeff unit="N/M"> 263.87 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 131.94 </damping_coeff>
+      <max_steer unit="DEG">0</max_steer>
+      <brake_group> LEFT </brake_group>
+      <retractable> 0 </retractable>
+    </contact>
+
+  <contact type="BOGEY" name="RIGHT_MAIN">
+      <location unit="M">
+        <x> 0.35 </x>
+        <y> 0.27 </y>
+        <z> -0.24 </z>
+      </location>
+      <static_friction> 0.80 </static_friction>
+      <dynamic_friction> 0.50 </dynamic_friction>
+      <rolling_friction> 0.02 </rolling_friction>
+      <spring_coeff unit="N/M"> 263.87 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 131.94 </damping_coeff>
+      <max_steer unit="DEG">0</max_steer>
+      <brake_group> RIGHT </brake_group>
+      <retractable> 0 </retractable>
+    </contact>
+
+  <contact type="STRUCTURE" name="LEFT_WING">
+      <location unit="M">
+        <x> 0.34 </x>
+        <y> -1.75 </y>
+        <z> -0.05 </z>
+      </location>
+      <static_friction> 1 </static_friction>
+      <dynamic_friction> 1 </dynamic_friction>
+      <spring_coeff unit="N/M"> 263.87 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 131.94 </damping_coeff>
+    </contact>
+
+  <contact type="STRUCTURE"
+      name="RIGHT_WING">
+      <location unit="M">
+        <x> 0.34 </x>
+        <y> 1.75 </y>
+        <z> -0.05 </z>
+      </location>
+      <static_friction> 1 </static_friction>
+      <dynamic_friction> 1 </dynamic_friction>
+      <spring_coeff unit="N/M"> 263.87 </spring_coeff>
+      <damping_coeff unit="N/M/SEC"> 131.94 </damping_coeff>
+    </contact>
+
+  </ground_reactions>
+
+  <system file="Conventional Controls.xml" />
+  <system file="Landing Gear.xml" />
+
+  <flight_control name="FCS: EvenFlow">
+
+  </flight_control>
+
+  <aerodynamics file="EvenFlowAerodynamics" />
+
+  <!-- Aerodynamics "from scratch" following Stevens 8.5 
+    
+    The main wing is split into two panels, each of which is calculated at its 
+    aerodynamic center. Only lift and drag are considered.
+
+    The local wind at each wing is calculated explicitly rather than using the
+    plane-relative qbarUV / VW.
+
+
+    Compiled from: EvenFlow.sexpr
+    -->
+
+  <external_reactions> </external_reactions>
+
+
+</fdm_config>
