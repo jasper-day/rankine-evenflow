@@ -1,1146 +1,1855 @@
 <aerodynamics>
-    <!--Aerodynamic Model after Stevens Aircraft Control and Simulation, Chap. 8.5-->
-    <!--"Medium fidelity" model with:-->
-    <!--- Simple treatment of stall effects (linear lift before and after stall)-->
-    <!--- Individual treatment of wing as left and right panels-->
-    <!--- Individual treatment of elevator and rudder-->
-    <!--- Prop wash over wings, fuselage, and empennage (REMOVED)-->
-    <!--- Wing downwash over empennage-->
-    <!--- Control surfaces accounted for as a change in angle-->
-    <!--- Fuselage drag along three axes-->
-    <!--Paper cuts:-->
-    <!--Forces are applied at the center of gravity, rather than using AERORP,-->
-    <!--therefore model must have AERORP equal to the center of gravity-->
-    <!--Author: Jasper Day-->
-    <!--Wing parameters-->
-    <function name="aero/quantity/x_w-bf">
-        <description>x loc of the wing AC, bf, %MAC</description>
-        <value> 0.12 </value>
-    </function>
-    <function name="aero/quantity/y_rw-bf">
-        <description>y loc of the right wing AC, bf, %MAC</description>
-        <!--Located at the geometric center of the wing-->
-        <value> 1.74 </value>
-    </function>
-    <function name="aero/quantity/y_lw-bf">
-        <description>y loc of the left wing AC, bf</description>
-        <!--Located at the geometric center of the wing-->
-        <product>
-            <value> -1.0 </value>
-            <property> aero/quantity/y_rw-bf </property>
-        </product>
-    </function>
-    <function name="aero/quantity/z_w-bf">
-        <description>z loc of the wing AC, bf, %MAC</description>
-        <value> -0.05 </value>
-    </function>
-    <function name="aero/coefficients/CD0_w">
-        <description>Zero lift drag coefficient</description>
-        <!--See Notion-->
-        <value> 0.0118 </value>
-    </function>
-    <function name="aero/coefficients/k_w">
-        <description>Main wing drag polar</description>
-        <!--See Notion-->
-        <value> 0.0464 </value>
-    </function>
-    <function name="aero/quantity/aileron-effectiveness">
-        <description>tau_a</description>
-        <!--TODO: determine this-->
-        <value> 0.4 </value>
-    </function>
-    <function name="aero/velocity/prop-wing-vi-fps">
-        <description>prop wash over the wing</description>
-        <product>
-            <value> 0.0 </value>
-            <!--eta_w-->
-            <property> propulsion/engine/prop-induced-velocity_fps </property>
-        </product>
-    </function>
-    <!--After 8.5-5, 8.5-6-->
-    <function name="aero/coefficients/CL_rw">
-        <description>Right wing lift coefficient</description>
-        <!--We will assume no zero-lift coefficient, but rotate the wing-->
-        <!--in the model to reflect the accurate zero-lift coefficient-->
-        <!--Sharp changes at stall could be improved-->
-        <table name="aero/table/CL_rw_alpha">
-            <independentVar lookup="row"> aero/calculated/alpha_rw-rad </independentVar>
-            <tableData> 
--1.57     0
--0.21305  -1.05
-0.21305   1.05
-1.57      0
- </tableData>
-        </table>
-    </function>
-    <function name="aero/coefficients/CL_lw">
-        <description>Left wing lift coefficient</description>
-        <!--We will assume no zero-lift coefficient, but rotate the wing-->
-        <!--in the model to reflect the accurate zero-lift coefficient-->
-        <!--Sharp changes at stall could be improved-->
-        <table name="aero/table/CL_lw_alpha">
-            <independentVar lookup="row"> aero/calculated/alpha_lw-rad </independentVar>
-            <tableData> 
--1.57     0
--0.21305  -1.05
-0.21305   1.05
-1.57      0
- </tableData>
-        </table>
-    </function>
-    <!--=========================================================================-->
-    <!--Horizontal tail parameters-->
-    <function name="aero/quantity/x_ht-bf">
-        <description>x loc of htail center</description>
-        <!--rough OpenVSP calculation-->
-        <value> -3.83 </value>
-    </function>
-    <!--tail assumed coincident with y-axis-->
-    <function name="aero/quantity/z_ht-bf">
-        <description>z loc of htail center</description>
+  <function name="aero/velocities/wing-zi-fps">
+    <product>
+      <max>
+        <value> 0 </value>
+        <property> velocities/u-aero-fps </property>
+      </max>
+      <value> 0.5 </value>
+      <sum>
+        <property> aero/coefficients/CL_lw0 </property>
+        <property> aero/coefficients/CL_rw0 </property>
+        <property> aero/coefficients/CL_lw1 </property>
+        <property> aero/coefficients/CL_rw1 </property>
+      </sum>
+      <value> 0.0464 </value>
+    </product>
+  </function>
+  <function name="aero/quantity/x_lw0-ft">
+    <value> 0.0798293963254593 </value>
+  </function>
+  <function name="aero/quantity/y_lw0-ft">
+    <value> -2.4606299212598426 </value>
+  </function>
+  <function name="aero/quantity/z_lw0-ft">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/coefficients/CD0_lw0">
+    <value> 0.0118 </value>
+  </function>
+  <function name="aero/coefficients/k_lw0">
+    <value> 0.0464 </value>
+  </function>
+  <function name="aero/metrics/S_lw0-sqft">
+    <value> 4.197925062516792 </value>
+  </function>
+  <function name="aero/velocities/prop-lw0-ui-fps">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/velocities/wing-lw0-zi-fps">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/calculated/delta-alpha_lw0_None-rad">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/velocities/U_lw0_bf-fps">
+    <sum>
+      <property> velocities/u-aero-fps </property>
+      <product>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/z_lw0-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/y_lw0-ft </property>
+      </product>
+      <property> aero/velocities/prop-lw0-ui-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/V_lw0_bf-fps">
+    <sum>
+      <property> velocities/v-aero-fps </property>
+      <product>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/x_lw0-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/z_lw0-ft </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_lw0_bf-fps">
+    <sum>
+      <property> velocities/w-aero-fps </property>
+      <product>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/y_lw0-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/x_lw0-ft </property>
+      </product>
+      <property> aero/velocities/wing-lw0-zi-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/U_lw0_wf-fps">
+    <sum>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/U_lw0_bf-fps </property>
+      </product>
+      <product>
         <value> 0.0 </value>
-    </function>
-    <function name="aero/coefficients/CD0_ht">
-        <description>H tail zero lift drag coefficient</description>
-        <!--source: Notion-->
-        <value> 0.0136 </value>
-    </function>
-    <function name="aero/coefficients/k_ht">
-        <description>H tail induced drag coefficient</description>
-        <!--source: OpenVSP-->
-        <value> 0.0513 </value>
-    </function>
-    <function name="aero/quantity/elevator-effectiveness">
-        <description>Flap effectiveness of elevator</description>
-        <!--TODO: find this actual number-->
-        <value> 0.5 </value>
-    </function>
-    <function name="aero/quantity/wing-ht-effectiveness">
-        <description>Effect of wing downwash on tail</description>
-        <!--TODO: find this actual number-->
-        <value> 0.8 </value>
-    </function>
-    <function name="aero/velocity/prop-ht-vi-fps">
-        <description>prop wash over hstab</description>
-        <product>
-            <value> 0.0 </value>
-            <!--better approximation to this number? Stevens says higher-->
-            <property> propulsion/engine/prop-induced-velocity_fps </property>
-        </product>
-    </function>
-    <function name="aero/coefficients/CL_ht">
-        <description>Horizontal tail lift coefficient</description>
-        <!--We will assume no zero-lift coefficient, but rotate the wing-->
-        <!--in the model to reflect the accurate zero-lift coefficient-->
-        <!--Sharp changes at stall could be improved-->
-        <table name="aero/table/CL_ht_alpha">
-            <independentVar lookup="row"> aero/calculated/alpha_ht-rad </independentVar>
-            <tableData> 
--1.57   0
--0.205  -1.0
-0.205   1.0
-1.57    0
+        <property> aero/velocities/V_lw0_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/W_lw0_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_lw0_wf-fps">
+    <sum>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/U_lw0_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_lw0_bf-fps </property>
+      </product>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/W_lw0_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/calculated/qbar_lw0-psf">
+    <product>
+      <value> 0.5 </value>
+      <property> atmosphere/rho-slugs_ft3 </property>
+      <sum>
+        <pow>
+          <property> aero/velocities/U_lw0_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+        <pow>
+          <property> aero/velocities/W_lw0_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+      </sum>
+    </product>
+  </function>
+  <function name="aero/calculated/alpha_lw0-rad">
+    <sum>
+      <atan2>
+        <property> aero/velocities/W_lw0_wf-fps </property>
+        <property> aero/velocities/U_lw0_wf-fps </property>
+      </atan2>
+      <property> aero/calculated/delta-alpha_lw0_None-rad </property>
+    </sum>
+  </function>
+  <function name="aero/coefficients/CL_lw0">
+    <table name="aero/table/CL_lw0_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_lw0-rad </independentVar>
+      <tableData> 
+-1.57                 0
+-0.21305442572147976  -1.1
+0.21305442572147976   1.1
+1.57                  0
  </tableData>
-        </table>
-    </function>
-    <!--=========================================================================-->
-    <!--Vertical tail parameters-->
-    <function name="aero/quantity/x_vt-bf">
-        <description>x loc of vtail center</description>
-        <!--TODO: determine exact quantity, %MAC-->
-        <value> -3.83 </value>
-    </function>
-    <!--tail assumed coincident with y-axis-->
-    <function name="aero/quantity/z_vt-bf">
-        <description>z loc of vtail center</description>
-        <!--TODO: determine exact quantity, %MAC-->
-        <value> -1.52 </value>
-    </function>
-    <function name="aero/coefficients/CD0_vt">
-        <description>V tail zero lift drag coefficient</description>
-        <!--source: Notion-->
-        <value> 0.0136 </value>
-    </function>
-    <function name="aero/coefficients/k_vt">
-        <description>V tail induced drag coefficient</description>
-        <!--source: theory, e = 0.9-->
-        <value> 0.0885 </value>
-    </function>
-    <function name="aero/quantity/rudder-effectiveness">
-        <description>Flap effectiveness of rudder</description>
-        <!--TODO: find this actual number for our design-->
-        <value> 0.7 </value>
-    </function>
-    <function name="aero/velocity/prop-vt-vi-fps">
-        <description>prop wash over vstab</description>
-        <product>
-            <value> 0.0 </value>
-            <!--Stevens says higher!-->
-            <property> propulsion/engine/prop-induced-velocity_fps </property>
-        </product>
-    </function>
-    <function name="aero/coefficients/CL_vt">
-        <description>Vertical tail lift coefficient</description>
-        <!--Sharp changes at stall could be improved-->
-        <!--TODO: vertical tail lift curve slope calculation-->
-        <table name="aero/table/CL_vt_alpha">
-            <independentVar lookup="row"> aero/calculated/alpha_vt-rad </independentVar>
-            <tableData> 
--1.57   0
--0.205  -1.0
-0.205   1.0
-1.57    0
+    </table>
+  </function>
+  <function name="aero/coefficients/CD-sep_lw0">
+    <table name="aero/table/CD-sep_lw0_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_lw0-rad </independentVar>
+      <tableData> 
+-1.57                 1
+-0.21305442572147976  0
+0.21305442572147976   0
+1.57                  1
  </tableData>
-        </table>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD_lw0">
+    <sum>
+      <property> aero/coefficients/CD0_lw0 </property>
+      <product>
+        <property> aero/coefficients/k_lw0 </property>
+        <pow>
+          <property> aero/coefficients/CL_lw0 </property>
+          <value> 2 </value>
+        </pow>
+      </product>
+      <property> aero/coefficients/CD-sep_lw0 </property>
+    </sum>
+  </function>
+  <function name="aero/forces/L_lw0-lb">
+    <product>
+      <property> aero/coefficients/CL_lw0 </property>
+      <property> aero/metrics/S_lw0-sqft </property>
+      <property> aero/calculated/qbar_lw0-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/D_lw0-lb">
+    <product>
+      <property> aero/coefficients/CD_lw0 </property>
+      <property> aero/metrics/S_lw0-sqft </property>
+      <property> aero/calculated/qbar_lw0-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/X_lw0_wf-lb">
+    <sum>
+      <product>
+        <property> aero/forces/L_lw0-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_lw0-rad </property>
+        </sin>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_lw0-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_lw0-rad </property>
+        </cos>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/forces/Z_lw0_wf-lb">
+    <sum>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/L_lw0-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_lw0-rad </property>
+        </cos>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_lw0-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_lw0-rad </property>
+        </sin>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/quantity/x_lw1-ft">
+    <value> 0.19465879265091862 </value>
+  </function>
+  <function name="aero/quantity/y_lw1-ft">
+    <value> -4.678477690288714 </value>
+  </function>
+  <function name="aero/quantity/z_lw1-ft">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/coefficients/CD0_lw1">
+    <value> 0.0118 </value>
+  </function>
+  <function name="aero/coefficients/k_lw1">
+    <value> 0.0464 </value>
+  </function>
+  <function name="aero/metrics/S_lw1-sqft">
+    <value> 3.8750077500155005 </value>
+  </function>
+  <function name="aero/velocities/prop-lw1-ui-fps">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/velocities/wing-lw1-zi-fps">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/calculated/delta-alpha_lw1_left-aileron-rad">
+    <product>
+      <value> 0.7 </value>
+      <property> fcs/left-aileron-pos-rad </property>
+    </product>
+  </function>
+  <function name="aero/velocities/U_lw1_bf-fps">
+    <sum>
+      <property> velocities/u-aero-fps </property>
+      <product>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/z_lw1-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/y_lw1-ft </property>
+      </product>
+      <property> aero/velocities/prop-lw1-ui-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/V_lw1_bf-fps">
+    <sum>
+      <property> velocities/v-aero-fps </property>
+      <product>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/x_lw1-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/z_lw1-ft </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_lw1_bf-fps">
+    <sum>
+      <property> velocities/w-aero-fps </property>
+      <product>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/y_lw1-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/x_lw1-ft </property>
+      </product>
+      <property> aero/velocities/wing-lw1-zi-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/U_lw1_wf-fps">
+    <sum>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/U_lw1_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_lw1_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/W_lw1_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_lw1_wf-fps">
+    <sum>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/U_lw1_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_lw1_bf-fps </property>
+      </product>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/W_lw1_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/calculated/qbar_lw1-psf">
+    <product>
+      <value> 0.5 </value>
+      <property> atmosphere/rho-slugs_ft3 </property>
+      <sum>
+        <pow>
+          <property> aero/velocities/U_lw1_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+        <pow>
+          <property> aero/velocities/W_lw1_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+      </sum>
+    </product>
+  </function>
+  <function name="aero/calculated/alpha_lw1-rad">
+    <sum>
+      <atan2>
+        <property> aero/velocities/W_lw1_wf-fps </property>
+        <property> aero/velocities/U_lw1_wf-fps </property>
+      </atan2>
+      <property> aero/calculated/delta-alpha_lw1_left-aileron-rad </property>
+    </sum>
+  </function>
+  <function name="aero/coefficients/CL_lw1">
+    <table name="aero/table/CL_lw1_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_lw1-rad </independentVar>
+      <tableData> 
+-1.57                 0
+-0.21305442572147976  -1.1
+0.21305442572147976   1.1
+1.57                  0
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD-sep_lw1">
+    <table name="aero/table/CD-sep_lw1_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_lw1-rad </independentVar>
+      <tableData> 
+-1.57                 1
+-0.21305442572147976  0
+0.21305442572147976   0
+1.57                  1
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD_lw1">
+    <sum>
+      <property> aero/coefficients/CD0_lw1 </property>
+      <product>
+        <property> aero/coefficients/k_lw1 </property>
+        <pow>
+          <property> aero/coefficients/CL_lw1 </property>
+          <value> 2 </value>
+        </pow>
+      </product>
+      <property> aero/coefficients/CD-sep_lw1 </property>
+    </sum>
+  </function>
+  <function name="aero/forces/L_lw1-lb">
+    <product>
+      <property> aero/coefficients/CL_lw1 </property>
+      <property> aero/metrics/S_lw1-sqft </property>
+      <property> aero/calculated/qbar_lw1-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/D_lw1-lb">
+    <product>
+      <property> aero/coefficients/CD_lw1 </property>
+      <property> aero/metrics/S_lw1-sqft </property>
+      <property> aero/calculated/qbar_lw1-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/X_lw1_wf-lb">
+    <sum>
+      <product>
+        <property> aero/forces/L_lw1-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_lw1-rad </property>
+        </sin>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_lw1-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_lw1-rad </property>
+        </cos>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/forces/Z_lw1_wf-lb">
+    <sum>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/L_lw1-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_lw1-rad </property>
+        </cos>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_lw1-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_lw1-rad </property>
+        </sin>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/quantity/x_rw0-ft">
+    <value> 0.0798293963254593 </value>
+  </function>
+  <function name="aero/quantity/y_rw0-ft">
+    <value> 2.4606299212598426 </value>
+  </function>
+  <function name="aero/quantity/z_rw0-ft">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/coefficients/CD0_rw0">
+    <value> 0.0118 </value>
+  </function>
+  <function name="aero/coefficients/k_rw0">
+    <value> 0.0464 </value>
+  </function>
+  <function name="aero/metrics/S_rw0-sqft">
+    <value> 4.197925062516792 </value>
+  </function>
+  <function name="aero/velocities/prop-rw0-ui-fps">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/velocities/wing-rw0-zi-fps">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/calculated/delta-alpha_rw0_None-rad">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/velocities/U_rw0_bf-fps">
+    <sum>
+      <property> velocities/u-aero-fps </property>
+      <product>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/z_rw0-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/y_rw0-ft </property>
+      </product>
+      <property> aero/velocities/prop-rw0-ui-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/V_rw0_bf-fps">
+    <sum>
+      <property> velocities/v-aero-fps </property>
+      <product>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/x_rw0-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/z_rw0-ft </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_rw0_bf-fps">
+    <sum>
+      <property> velocities/w-aero-fps </property>
+      <product>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/y_rw0-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/x_rw0-ft </property>
+      </product>
+      <property> aero/velocities/wing-rw0-zi-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/U_rw0_wf-fps">
+    <sum>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/U_rw0_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_rw0_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/W_rw0_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_rw0_wf-fps">
+    <sum>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/U_rw0_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_rw0_bf-fps </property>
+      </product>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/W_rw0_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/calculated/qbar_rw0-psf">
+    <product>
+      <value> 0.5 </value>
+      <property> atmosphere/rho-slugs_ft3 </property>
+      <sum>
+        <pow>
+          <property> aero/velocities/U_rw0_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+        <pow>
+          <property> aero/velocities/W_rw0_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+      </sum>
+    </product>
+  </function>
+  <function name="aero/calculated/alpha_rw0-rad">
+    <sum>
+      <atan2>
+        <property> aero/velocities/W_rw0_wf-fps </property>
+        <property> aero/velocities/U_rw0_wf-fps </property>
+      </atan2>
+      <property> aero/calculated/delta-alpha_rw0_None-rad </property>
+    </sum>
+  </function>
+  <function name="aero/coefficients/CL_rw0">
+    <table name="aero/table/CL_rw0_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_rw0-rad </independentVar>
+      <tableData> 
+-1.57                 0
+-0.21305442572147976  -1.1
+0.21305442572147976   1.1
+1.57                  0
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD-sep_rw0">
+    <table name="aero/table/CD-sep_rw0_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_rw0-rad </independentVar>
+      <tableData> 
+-1.57                 1
+-0.21305442572147976  0
+0.21305442572147976   0
+1.57                  1
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD_rw0">
+    <sum>
+      <property> aero/coefficients/CD0_rw0 </property>
+      <product>
+        <property> aero/coefficients/k_rw0 </property>
+        <pow>
+          <property> aero/coefficients/CL_rw0 </property>
+          <value> 2 </value>
+        </pow>
+      </product>
+      <property> aero/coefficients/CD-sep_rw0 </property>
+    </sum>
+  </function>
+  <function name="aero/forces/L_rw0-lb">
+    <product>
+      <property> aero/coefficients/CL_rw0 </property>
+      <property> aero/metrics/S_rw0-sqft </property>
+      <property> aero/calculated/qbar_rw0-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/D_rw0-lb">
+    <product>
+      <property> aero/coefficients/CD_rw0 </property>
+      <property> aero/metrics/S_rw0-sqft </property>
+      <property> aero/calculated/qbar_rw0-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/X_rw0_wf-lb">
+    <sum>
+      <product>
+        <property> aero/forces/L_rw0-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_rw0-rad </property>
+        </sin>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_rw0-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_rw0-rad </property>
+        </cos>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/forces/Z_rw0_wf-lb">
+    <sum>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/L_rw0-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_rw0-rad </property>
+        </cos>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_rw0-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_rw0-rad </property>
+        </sin>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/quantity/x_rw1-ft">
+    <value> 0.0798293963254593 </value>
+  </function>
+  <function name="aero/quantity/y_rw1-ft">
+    <value> 4.678477690288714 </value>
+  </function>
+  <function name="aero/quantity/z_rw1-ft">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/coefficients/CD0_rw1">
+    <value> 0.0118 </value>
+  </function>
+  <function name="aero/coefficients/k_rw1">
+    <value> 0.0464 </value>
+  </function>
+  <function name="aero/metrics/S_rw1-sqft">
+    <value> 3.8750077500155005 </value>
+  </function>
+  <function name="aero/velocities/prop-rw1-ui-fps">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/velocities/wing-rw1-zi-fps">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/calculated/delta-alpha_rw1_right-aileron-rad">
+    <product>
+      <value> 0.7 </value>
+      <property> fcs/right-aileron-pos-rad </property>
+    </product>
+  </function>
+  <function name="aero/velocities/U_rw1_bf-fps">
+    <sum>
+      <property> velocities/u-aero-fps </property>
+      <product>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/z_rw1-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/y_rw1-ft </property>
+      </product>
+      <property> aero/velocities/prop-rw1-ui-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/V_rw1_bf-fps">
+    <sum>
+      <property> velocities/v-aero-fps </property>
+      <product>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/x_rw1-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/z_rw1-ft </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_rw1_bf-fps">
+    <sum>
+      <property> velocities/w-aero-fps </property>
+      <product>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/y_rw1-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/x_rw1-ft </property>
+      </product>
+      <property> aero/velocities/wing-rw1-zi-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/U_rw1_wf-fps">
+    <sum>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/U_rw1_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_rw1_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/W_rw1_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_rw1_wf-fps">
+    <sum>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/U_rw1_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_rw1_bf-fps </property>
+      </product>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/W_rw1_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/calculated/qbar_rw1-psf">
+    <product>
+      <value> 0.5 </value>
+      <property> atmosphere/rho-slugs_ft3 </property>
+      <sum>
+        <pow>
+          <property> aero/velocities/U_rw1_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+        <pow>
+          <property> aero/velocities/W_rw1_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+      </sum>
+    </product>
+  </function>
+  <function name="aero/calculated/alpha_rw1-rad">
+    <sum>
+      <atan2>
+        <property> aero/velocities/W_rw1_wf-fps </property>
+        <property> aero/velocities/U_rw1_wf-fps </property>
+      </atan2>
+      <property> aero/calculated/delta-alpha_rw1_right-aileron-rad </property>
+    </sum>
+  </function>
+  <function name="aero/coefficients/CL_rw1">
+    <table name="aero/table/CL_rw1_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_rw1-rad </independentVar>
+      <tableData> 
+-1.57                 0
+-0.21305442572147976  -1.1
+0.21305442572147976   1.1
+1.57                  0
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD-sep_rw1">
+    <table name="aero/table/CD-sep_rw1_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_rw1-rad </independentVar>
+      <tableData> 
+-1.57                 1
+-0.21305442572147976  0
+0.21305442572147976   0
+1.57                  1
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD_rw1">
+    <sum>
+      <property> aero/coefficients/CD0_rw1 </property>
+      <product>
+        <property> aero/coefficients/k_rw1 </property>
+        <pow>
+          <property> aero/coefficients/CL_rw1 </property>
+          <value> 2 </value>
+        </pow>
+      </product>
+      <property> aero/coefficients/CD-sep_rw1 </property>
+    </sum>
+  </function>
+  <function name="aero/forces/L_rw1-lb">
+    <product>
+      <property> aero/coefficients/CL_rw1 </property>
+      <property> aero/metrics/S_rw1-sqft </property>
+      <property> aero/calculated/qbar_rw1-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/D_rw1-lb">
+    <product>
+      <property> aero/coefficients/CD_rw1 </property>
+      <property> aero/metrics/S_rw1-sqft </property>
+      <property> aero/calculated/qbar_rw1-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/X_rw1_wf-lb">
+    <sum>
+      <product>
+        <property> aero/forces/L_rw1-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_rw1-rad </property>
+        </sin>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_rw1-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_rw1-rad </property>
+        </cos>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/forces/Z_rw1_wf-lb">
+    <sum>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/L_rw1-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_rw1-rad </property>
+        </cos>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_rw1-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_rw1-rad </property>
+        </sin>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/quantity/x_ht-ft">
+    <value> -3.8537992125984264 </value>
+  </function>
+  <function name="aero/quantity/y_ht-ft">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/quantity/z_ht-ft">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/coefficients/CD0_ht">
+    <value> 0.0136 </value>
+  </function>
+  <function name="aero/coefficients/k_ht">
+    <value> 0.0513 </value>
+  </function>
+  <function name="aero/metrics/S_ht-sqft">
+    <value> 2.7986167083445284 </value>
+  </function>
+  <function name="aero/velocities/prop-ht-ui-fps">
+    <product>
+      <value> 0.0 </value>
+      <property> propulsion/engine/prop-induced-velocity_fps </property>
+    </product>
+  </function>
+  <function name="aero/velocities/wing-ht-zi-fps">
+    <product>
+      <value> -1.0 </value>
+      <property> aero/velocities/wing-zi-fps </property>
+      <value> 0.8 </value>
+    </product>
+  </function>
+  <function name="aero/calculated/delta-alpha_ht_elevator-rad">
+    <product>
+      <value> 0.5 </value>
+      <property> fcs/elevator-pos-rad </property>
+    </product>
+  </function>
+  <function name="aero/velocities/U_ht_bf-fps">
+    <sum>
+      <property> velocities/u-aero-fps </property>
+      <product>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/z_ht-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/y_ht-ft </property>
+      </product>
+      <property> aero/velocities/prop-ht-ui-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/V_ht_bf-fps">
+    <sum>
+      <property> velocities/v-aero-fps </property>
+      <product>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/x_ht-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/z_ht-ft </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_ht_bf-fps">
+    <sum>
+      <property> velocities/w-aero-fps </property>
+      <product>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/y_ht-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/x_ht-ft </property>
+      </product>
+      <property> aero/velocities/wing-ht-zi-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/U_ht_wf-fps">
+    <sum>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/U_ht_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_ht_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/W_ht_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_ht_wf-fps">
+    <sum>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/U_ht_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_ht_bf-fps </property>
+      </product>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/W_ht_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/calculated/qbar_ht-psf">
+    <product>
+      <value> 0.5 </value>
+      <property> atmosphere/rho-slugs_ft3 </property>
+      <sum>
+        <pow>
+          <property> aero/velocities/U_ht_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+        <pow>
+          <property> aero/velocities/W_ht_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+      </sum>
+    </product>
+  </function>
+  <function name="aero/calculated/alpha_ht-rad">
+    <sum>
+      <atan2>
+        <property> aero/velocities/W_ht_wf-fps </property>
+        <property> aero/velocities/U_ht_wf-fps </property>
+      </atan2>
+      <property> aero/calculated/delta-alpha_ht_elevator-rad </property>
+    </sum>
+  </function>
+  <function name="aero/coefficients/CL_ht">
+    <table name="aero/table/CL_ht_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_ht-rad </independentVar>
+      <tableData> 
+-1.57                 0
+-0.20491803278688525  -1.0
+0.20491803278688525   1.0
+1.57                  0
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD-sep_ht">
+    <table name="aero/table/CD-sep_ht_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_ht-rad </independentVar>
+      <tableData> 
+-1.57                 1
+-0.20491803278688525  0
+0.20491803278688525   0
+1.57                  1
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD_ht">
+    <sum>
+      <property> aero/coefficients/CD0_ht </property>
+      <product>
+        <property> aero/coefficients/k_ht </property>
+        <pow>
+          <property> aero/coefficients/CL_ht </property>
+          <value> 2 </value>
+        </pow>
+      </product>
+      <property> aero/coefficients/CD-sep_ht </property>
+    </sum>
+  </function>
+  <function name="aero/forces/L_ht-lb">
+    <product>
+      <property> aero/coefficients/CL_ht </property>
+      <property> aero/metrics/S_ht-sqft </property>
+      <property> aero/calculated/qbar_ht-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/D_ht-lb">
+    <product>
+      <property> aero/coefficients/CD_ht </property>
+      <property> aero/metrics/S_ht-sqft </property>
+      <property> aero/calculated/qbar_ht-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/X_ht_wf-lb">
+    <sum>
+      <product>
+        <property> aero/forces/L_ht-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_ht-rad </property>
+        </sin>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_ht-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_ht-rad </property>
+        </cos>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/forces/Z_ht_wf-lb">
+    <sum>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/L_ht-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_ht-rad </property>
+        </cos>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_ht-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_ht-rad </property>
+        </sin>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/quantity/x_vt-ft">
+    <value> -3.8537992125984264 </value>
+  </function>
+  <function name="aero/quantity/y_vt-ft">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/quantity/z_vt-ft">
+    <value> -0.33464566929133854 </value>
+  </function>
+  <function name="aero/coefficients/CD0_vt">
+    <value> 0.0136 </value>
+  </function>
+  <function name="aero/coefficients/k_vt">
+    <value> 0.0885 </value>
+  </function>
+  <function name="aero/metrics/S_vt-sqft">
+    <value> 1.02330343549576 </value>
+  </function>
+  <function name="aero/velocities/prop-vt-ui-fps">
+    <product>
+      <value> 0.0 </value>
+      <property> propulsion/engine/prop-induced-velocity_fps </property>
+    </product>
+  </function>
+  <function name="aero/velocities/wing-vt-zi-fps">
+    <value> 0.0 </value>
+  </function>
+  <function name="aero/calculated/delta-alpha_vt_rudder-rad">
+    <product>
+      <value> 0.7 </value>
+      <property> fcs/rudder-pos-rad </property>
+    </product>
+  </function>
+  <function name="aero/velocities/U_vt_bf-fps">
+    <sum>
+      <property> velocities/u-aero-fps </property>
+      <product>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/z_vt-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/y_vt-ft </property>
+      </product>
+      <property> aero/velocities/prop-vt-ui-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/V_vt_bf-fps">
+    <sum>
+      <property> velocities/v-aero-fps </property>
+      <product>
+        <property> velocities/r-aero-rad_sec </property>
+        <property> aero/quantity/x_vt-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/z_vt-ft </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_vt_bf-fps">
+    <sum>
+      <property> velocities/w-aero-fps </property>
+      <product>
+        <property> velocities/p-aero-rad_sec </property>
+        <property> aero/quantity/y_vt-ft </property>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> velocities/q-aero-rad_sec </property>
+        <property> aero/quantity/x_vt-ft </property>
+      </product>
+      <property> aero/velocities/wing-vt-zi-fps </property>
+    </sum>
+  </function>
+  <function name="aero/velocities/U_vt_wf-fps">
+    <sum>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/U_vt_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/V_vt_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/W_vt_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/W_vt_wf-fps">
+    <sum>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/U_vt_bf-fps </property>
+      </product>
+      <product>
+        <value> 1.0 </value>
+        <property> aero/velocities/V_vt_bf-fps </property>
+      </product>
+      <product>
+        <value> 0.0 </value>
+        <property> aero/velocities/W_vt_bf-fps </property>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/calculated/qbar_vt-psf">
+    <product>
+      <value> 0.5 </value>
+      <property> atmosphere/rho-slugs_ft3 </property>
+      <sum>
+        <pow>
+          <property> aero/velocities/U_vt_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+        <pow>
+          <property> aero/velocities/W_vt_wf-fps </property>
+          <value> 2 </value>
+        </pow>
+      </sum>
+    </product>
+  </function>
+  <function name="aero/calculated/alpha_vt-rad">
+    <sum>
+      <atan2>
+        <property> aero/velocities/W_vt_wf-fps </property>
+        <property> aero/velocities/U_vt_wf-fps </property>
+      </atan2>
+      <property> aero/calculated/delta-alpha_vt_rudder-rad </property>
+    </sum>
+  </function>
+  <function name="aero/coefficients/CL_vt">
+    <table name="aero/table/CL_vt_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_vt-rad </independentVar>
+      <tableData> 
+-1.57                 0
+-0.20491803278688525  -1.0
+0.20491803278688525   1.0
+1.57                  0
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD-sep_vt">
+    <table name="aero/table/CD-sep_vt_alpha">
+      <independentVar lookup="row"> aero/calculated/alpha_vt-rad </independentVar>
+      <tableData> 
+-1.57                 1
+-0.20491803278688525  0
+0.20491803278688525   0
+1.57                  1
+ </tableData>
+    </table>
+  </function>
+  <function name="aero/coefficients/CD_vt">
+    <sum>
+      <property> aero/coefficients/CD0_vt </property>
+      <product>
+        <property> aero/coefficients/k_vt </property>
+        <pow>
+          <property> aero/coefficients/CL_vt </property>
+          <value> 2 </value>
+        </pow>
+      </product>
+      <property> aero/coefficients/CD-sep_vt </property>
+    </sum>
+  </function>
+  <function name="aero/forces/L_vt-lb">
+    <product>
+      <property> aero/coefficients/CL_vt </property>
+      <property> aero/metrics/S_vt-sqft </property>
+      <property> aero/calculated/qbar_vt-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/D_vt-lb">
+    <product>
+      <property> aero/coefficients/CD_vt </property>
+      <property> aero/metrics/S_vt-sqft </property>
+      <property> aero/calculated/qbar_vt-psf </property>
+    </product>
+  </function>
+  <function name="aero/forces/X_vt_wf-lb">
+    <sum>
+      <product>
+        <property> aero/forces/L_vt-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_vt-rad </property>
+        </sin>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_vt-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_vt-rad </property>
+        </cos>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/forces/Z_vt_wf-lb">
+    <sum>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/L_vt-lb </property>
+        <cos>
+          <property> aero/calculated/alpha_vt-rad </property>
+        </cos>
+      </product>
+      <product>
+        <value> -1.0 </value>
+        <property> aero/forces/D_vt-lb </property>
+        <sin>
+          <property> aero/calculated/alpha_vt-rad </property>
+        </sin>
+      </product>
+    </sum>
+  </function>
+  <function name="aero/velocities/fus-u-fps">
+    <sum>
+      <property> velocities/u-aero-fps </property>
+      <product>
+        <value> 0.0 </value>
+        <property> propulsion/engine/prop-induced-velocity_fps </property>
+      </product>
+    </sum>
+  </function>
+  <axis name="X" frame="BODY">
+    <function name="aero/forces/X_lw0-lb">
+      <sum>
+        <product>
+          <value> 1.0 </value>
+          <property> aero/forces/X_lw0_wf-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_lw0_wf-lb </property>
+        </product>
+      </sum>
     </function>
-    <!--=========================================================================-->
-    <!--Fuselage-->
-    <function name="aero/quantity/X_fus-uu-ft2">
-        <description>Fuselage X-axis force coefficient</description>
-        <!--TODO find this (given by frontal area * drag coefficient)-->
+    <function name="aero/forces/X_rw0-lb">
+      <sum>
+        <product>
+          <value> 1.0 </value>
+          <property> aero/forces/X_rw0_wf-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_rw0_wf-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/forces/X_lw1-lb">
+      <sum>
+        <product>
+          <value> 1.0 </value>
+          <property> aero/forces/X_lw1_wf-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_lw1_wf-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/forces/X_rw1-lb">
+      <sum>
+        <product>
+          <value> 1.0 </value>
+          <property> aero/forces/X_rw1_wf-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_rw1_wf-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/forces/X_ht-lb">
+      <sum>
+        <product>
+          <value> 1.0 </value>
+          <property> aero/forces/X_ht_wf-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_ht_wf-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/forces/X_vt-lb">
+      <sum>
+        <product>
+          <value> 1.0 </value>
+          <property> aero/forces/X_vt_wf-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_vt_wf-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/forces/X_fus-lb">
+      <product>
+        <value> -0.5 </value>
+        <property> atmosphere/rho-slugs_ft3 </property>
         <value> 0.575 </value>
+        <abs>
+          <property> aero/velocities/fus-u-fps </property>
+        </abs>
+        <property> aero/velocities/fus-u-fps </property>
+      </product>
     </function>
-    <function name="aero/quantity/Y_fus-vv-ft2">
-        <description>Fuselage Y-axis force coefficient</description>
-        <!--TODO find this (side area)-->
-        <value> 2.0 </value>
-    </function>
-    <function name="aero/quantity/Z_fus-ww-ft2">
-        <description>Fuselage Z-axis force coefficient</description>
-        <!--TODO find this (top area)-->
-        <value> 2.0 </value>
-    </function>
-    <function name="aero/quantity/x_fus-bf-ft">
-        <description>Fuselage X-axis centroid</description>
-        <!--TODO find this-->
-        <value> 0.0 </value>
-    </function>
-    <function name="aero/quantity/y_fus-bf-ft">
-        <description>Fuselage Y-axis centroid</description>
-        <!--TODO find this-->
-        <value> 0.0 </value>
-    </function>
-    <function name="aero/quantity/z_fus-bf-ft">
-        <description>Fuselage Z-axis centroid</description>
-        <!--TODO find this-->
-        <value> 0.0 </value>
-    </function>
-    <!--Fuselage velocity-->
-    <!--8.5-21-->
-    <function name="aero/velocity/fus-u-fps">
-        <description>Fuselage u velocity</description>
-        <sum>
-            <property> velocities/u-aero-fps </property>
-            <product>
-                <value> 0.0 </value>
-                <property> propulsion/engine/prop-induced-velocity_fps </property>
-            </product>
-        </sum>
-    </function>
-    <!--=========================================================================-->
-    <!--Calculated dimensional quantities-->
-    <!--Main wing-->
-    <function name="aero/quantity/x_w-bf-ft">
+  </axis>
+  <axis name="Y" frame="BODY">
+    <function name="aero/forces/Y_lw0-lb">
+      <sum>
         <product>
-            <property> aero/quantity/x_w-bf </property>
-            <property> metrics/cbarw-ft </property>
+          <value> 0.0 </value>
+          <property> aero/forces/X_lw0_wf-lb </property>
         </product>
-    </function>
-    <function name="aero/quantity/y_rw-bf-ft">
         <product>
-            <property> aero/quantity/y_rw-bf </property>
-            <property> metrics/cbarw-ft </property>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_lw0_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <function name="aero/quantity/y_lw-bf-ft">
+    <function name="aero/forces/Y_rw0-lb">
+      <sum>
         <product>
-            <property> aero/quantity/y_lw-bf </property>
-            <property> metrics/cbarw-ft </property>
+          <value> 0.0 </value>
+          <property> aero/forces/X_rw0_wf-lb </property>
         </product>
-    </function>
-    <function name="aero/quantity/z_w-bf-ft">
         <product>
-            <property> aero/quantity/z_w-bf </property>
-            <property> metrics/cbarw-ft </property>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_rw0_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <!--Horizontal tail-->
-    <function name="aero/quantity/x_ht-bf-ft">
+    <function name="aero/forces/Y_lw1-lb">
+      <sum>
         <product>
-            <property> aero/quantity/x_ht-bf </property>
-            <property> metrics/cbarw-ft </property>
+          <value> 0.0 </value>
+          <property> aero/forces/X_lw1_wf-lb </property>
         </product>
-    </function>
-    <function name="aero/quantity/z_ht-bf-ft">
         <product>
-            <property> aero/quantity/z_ht-bf </property>
-            <property> metrics/cbarw-ft </property>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_lw1_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <!--Vertical Tail-->
-    <function name="aero/quantity/x_vt-bf-ft">
+    <function name="aero/forces/Y_rw1-lb">
+      <sum>
         <product>
-            <property> aero/quantity/x_vt-bf </property>
-            <property> metrics/cbarw-ft </property>
+          <value> 0.0 </value>
+          <property> aero/forces/X_rw1_wf-lb </property>
         </product>
-    </function>
-    <function name="aero/quantity/z_vt-bf-ft">
         <product>
-            <property> aero/quantity/z_vt-bf </property>
-            <property> metrics/cbarw-ft </property>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_rw1_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <!--=========================================================================-->
-    <!--Main wing calculations-->
-    <!--Velocity calculations per Stevens 8.5-1-->
-    <function name="aero/velocity/U_rw-fps">
-        <description>Axial velocity at right wing</description>
-        <sum>
-            <property> velocities/u-aero-fps </property>
-            <product>
-                <property> velocities/q-aero-rad_sec </property>
-                <property> aero/quantity/z_w-bf-ft </property>
-            </product>
-            <product>
-                <value> -1.0 </value>
-                <property> velocities/r-aero-rad_sec </property>
-                <property> aero/quantity/y_rw-bf-ft </property>
-            </product>
-            <property> aero/velocity/prop-wing-vi-fps </property>
-        </sum>
-    </function>
-    <function name="aero/velocity/U_lw-fps">
-        <description>Axial velocity at left wing</description>
-        <sum>
-            <property> velocities/u-aero-fps </property>
-            <product>
-                <property> velocities/q-aero-rad_sec </property>
-                <property> aero/quantity/z_w-bf-ft </property>
-            </product>
-            <product>
-                <value> -1.0 </value>
-                <property> velocities/r-aero-rad_sec </property>
-                <property> aero/quantity/y_lw-bf-ft </property>
-            </product>
-            <property> aero/velocity/prop-wing-vi-fps </property>
-        </sum>
-    </function>
-    <function name="aero/velocity/V_w-fps">
-        <description>Side velocity at either wing</description>
-        <sum>
-            <property> velocities/v-aero-fps </property>
-            <product>
-                <property> velocities/r-aero-rad_sec </property>
-                <property> aero/quantity/x_w-bf-ft </property>
-            </product>
-            <product>
-                <value> -1.0 </value>
-                <property> velocities/p-aero-rad_sec </property>
-                <property> aero/quantity/z_w-bf-ft </property>
-            </product>
-        </sum>
-    </function>
-    <function name="aero/velocity/W_rw-fps">
-        <description>Normal velocity at right wing</description>
-        <sum>
-            <property> velocities/w-aero-fps </property>
-            <product>
-                <property> velocities/p-aero-rad_sec </property>
-                <property> aero/quantity/y_rw-bf-ft </property>
-            </product>
-            <product>
-                <value> -1.0 </value>
-                <property> velocities/q-aero-rad_sec </property>
-                <property> aero/quantity/x_w-bf-ft </property>
-            </product>
-        </sum>
-    </function>
-    <function name="aero/velocity/W_lw-fps">
-        <description>Normal velocity at left wing</description>
-        <sum>
-            <property> velocities/w-aero-fps </property>
-            <product>
-                <property> velocities/p-aero-rad_sec </property>
-                <property> aero/quantity/y_lw-bf-ft </property>
-            </product>
-            <product>
-                <value> -1.0 </value>
-                <property> velocities/q-aero-rad_sec </property>
-                <property> aero/quantity/x_w-bf-ft </property>
-            </product>
-        </sum>
-    </function>
-    <!--Stevens 8.5-2-->
-    <function name="aero/calculated/qbarUW_rw-psf">
-        <description>Effective dynamic of right wing</description>
+    <function name="aero/forces/Y_ht-lb">
+      <sum>
         <product>
-            <value> 0.5 </value>
-            <property> atmosphere/rho-slugs_ft3 </property>
-            <sum>
-                <pow>
-                    <property> aero/velocity/U_rw-fps </property>
-                    <value> 2 </value>
-                </pow>
-                <pow>
-                    <property> aero/velocity/W_rw-fps </property>
-                    <value> 2 </value>
-                </pow>
-            </sum>
+          <value> 0.0 </value>
+          <property> aero/forces/X_ht_wf-lb </property>
         </product>
-    </function>
-    <function name="aero/calculated/qbarUW_lw-psf">
-        <description>Effective dynamic of left wing</description>
         <product>
-            <value> 0.5 </value>
-            <property> atmosphere/rho-slugs_ft3 </property>
-            <sum>
-                <pow>
-                    <property> aero/velocity/U_lw-fps </property>
-                    <value> 2 </value>
-                </pow>
-                <pow>
-                    <property> aero/velocity/W_lw-fps </property>
-                    <value> 2 </value>
-                </pow>
-            </sum>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_ht_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <!--Stevens 8.5-3-->
-    <function name="aero/calculated/alpha_rw-rad">
-        <description>Angle of attack of right wing panel</description>
-        <!--need to subtract off zero-lift angle of attack-->
-        <sum>
-            <atan2>
-                <property> aero/velocity/W_rw-fps </property>
-                <property> aero/velocity/U_rw-fps </property>
-            </atan2>
-            <product>
-                <property> aero/quantity/aileron-effectiveness </property>
-                <property> fcs/right-aileron-pos-rad </property>
-            </product>
-        </sum>
-    </function>
-    <!--Stevens 8.5-4-->
-    <function name="aero/calculated/alpha_lw-rad">
-        <description>Angle of attack of left wing panel</description>
-        <!--need to subtract off zero-lift angle of attack-->
-        <!--No negative sign needed; ailerons individually considered-->
-        <sum>
-            <atan2>
-                <property> aero/velocity/W_lw-fps </property>
-                <property> aero/velocity/U_lw-fps </property>
-            </atan2>
-            <product>
-                <property> aero/quantity/aileron-effectiveness </property>
-                <property> fcs/left-aileron-pos-rad </property>
-            </product>
-        </sum>
-    </function>
-    <function name="aero/coefficients/CD-sep_rw">
-        <description>Right wing separation drag coefficient</description>
-        <!--increase from zero at stall to flat plate drag coefficient-->
-        <table name="aero/coefficients/CD-sep_rw_alpha">
-            <independentVar lookup="row"> aero/calculated/alpha_rw-rad </independentVar>
-            <tableData> 
--1.57  1
--0.21  0
-0.21   0
-1.57   1
- </tableData>
-        </table>
-    </function>
-    <function name="aero/coefficients/CD-sep_lw">
-        <description>Left wing separation drag coefficient</description>
-        <!--increase from zero at stall to flat plate drag coefficient-->
-        <table name="aero/coefficients/CD-sep_lw_alpha">
-            <independentVar lookup="row"> aero/calculated/alpha_lw-rad </independentVar>
-            <tableData> 
--1.57  1
--0.21  0
-0.21   0
-1.57   1
- </tableData>
-        </table>
-    </function>
-    <!--Ignore rearward flight (Stevens 8.5-7, 8.5-8)-->
-    <!--8.5-9-->
-    <function name="aero/coefficients/CD_rw">
-        <description>Right wing drag coefficient</description>
-        <sum>
-            <property> aero/coefficients/CD0_w </property>
-            <product>
-                <property> aero/coefficients/k_w </property>
-                <pow>
-                    <property> aero/coefficients/CL_rw </property>
-                    <value> 2 </value>
-                </pow>
-            </product>
-            <property> aero/coefficients/CD-sep_rw </property>
-        </sum>
-    </function>
-    <function name="aero/coefficients/CD_lw">
-        <description>Left wing drag coefficient</description>
-        <sum>
-            <property> aero/coefficients/CD0_w </property>
-            <product>
-                <property> aero/coefficients/k_w </property>
-                <pow>
-                    <property> aero/coefficients/CL_lw </property>
-                    <value> 2 </value>
-                </pow>
-            </product>
-            <property> aero/coefficients/CD-sep_lw </property>
-        </sum>
-    </function>
-    <!--8.5-10-->
-    <function name="aero/forces/L_rw-lb">
-        <description>Right wing lift</description>
+    <function name="aero/forces/Y_vt-lb">
+      <sum>
         <product>
-            <value> 0.5 </value>
-            <!--half wing area-->
-            <property> aero/coefficients/CL_rw </property>
-            <property> metrics/Sw-sqft </property>
-            <property> aero/calculated/qbarUW_rw-psf </property>
+          <value> 0.0 </value>
+          <property> aero/forces/X_vt_wf-lb </property>
         </product>
-    </function>
-    <function name="aero/forces/L_lw-lb">
-        <description>Left wing lift</description>
         <product>
-            <value> 0.5 </value>
-            <!--half wing area-->
-            <property> aero/coefficients/CL_lw </property>
-            <property> metrics/Sw-sqft </property>
-            <property> aero/calculated/qbarUW_lw-psf </property>
+          <value> 1.0 </value>
+          <property> aero/forces/Z_vt_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <!--8.5-11-->
-    <function name="aero/forces/D_rw-lb">
-        <description>Right wing drag</description>
+    <function name="aero/forces/Y_fus-lb">
+      <product>
+        <value> -0.5 </value>
+        <property> atmosphere/rho-slugs_ft3 </property>
+        <value> 2 </value>
+        <abs>
+          <property> velocities/v-aero-fps </property>
+        </abs>
+        <property> velocities/v-aero-fps </property>
+      </product>
+    </function>
+  </axis>
+  <axis name="Z" frame="BODY">
+    <function name="aero/forces/Z_lw0-lb">
+      <sum>
         <product>
-            <value> 0.5 </value>
-            <property> aero/coefficients/CD_rw </property>
-            <property> metrics/Sw-sqft </property>
-            <property> aero/calculated/qbarUW_rw-psf </property>
+          <value> 0.0 </value>
+          <property> aero/forces/X_lw0_wf-lb </property>
         </product>
-    </function>
-    <function name="aero/forces/D_lw-lb">
-        <description>Left wing drag</description>
         <product>
-            <value> 0.5 </value>
-            <property> aero/coefficients/CD_lw </property>
-            <property> metrics/Sw-sqft </property>
-            <property> aero/calculated/qbarUW_lw-psf </property>
+          <value> 1.0 </value>
+          <property> aero/forces/Z_lw0_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <!--8.5-15-->
-    <function name="aero/velocity/wing-vi-fps">
-        <description>Induced velocity of the wing at the wing</description>
+    <function name="aero/forces/Z_rw0-lb">
+      <sum>
         <product>
-            <max>
-                <value> 0 </value>
-                <property> velocities/u-aero-fps </property>
-            </max>
-            <value> 0.5 </value>
-            <sum>
-                <property> aero/coefficients/CL_lw </property>
-                <property> aero/coefficients/CL_rw </property>
-            </sum>
-            <property> aero/coefficients/k_w </property>
+          <value> 0.0 </value>
+          <property> aero/forces/X_rw0_wf-lb </property>
         </product>
-    </function>
-    <!--=========================================================================-->
-    <!--Horizontal tail calculations-->
-    <!--8.5-14-->
-    <function name="aero/velocity/U_ht-fps">
-        <description>X velocity at horiz. tail</description>
-        <sum>
-            <property> velocities/u-aero-fps </property>
-            <product>
-                <property> velocities/q-aero-rad_sec </property>
-                <property> aero/quantity/z_ht-bf-ft </property>
-            </product>
-            <property> aero/velocity/prop-ht-vi-fps </property>
-        </sum>
-    </function>
-    <function name="aero/velocity/V_ht-fps">
-        <description>Y velocity at horiz tail</description>
-        <sum>
-            <property> velocities/v-aero-fps </property>
-            <product>
-                <property> velocities/r-aero-rad_sec </property>
-                <property> aero/quantity/x_ht-bf-ft </property>
-            </product>
-            <product>
-                <value> -1.0 </value>
-                <property> velocities/p-aero-rad_sec </property>
-                <property> aero/quantity/z_ht-bf-ft </property>
-            </product>
-        </sum>
-    </function>
-    <function name="aero/velocity/W_ht-fps">
-        <description>Z velocity at horiz tail</description>
-        <sum>
-            <property> velocities/w-aero-fps </property>
-            <product>
-                <value> -1.0 </value>
-                <property> velocities/q-aero-rad_sec </property>
-                <property> aero/quantity/x_ht-bf-ft </property>
-            </product>
-            <product>
-                <value> -1.0 </value>
-                <property> aero/velocity/wing-vi-fps </property>
-                <property> aero/quantity/wing-ht-effectiveness </property>
-            </product>
-        </sum>
-    </function>
-    <!--8.5-16-->
-    <function name="aero/calculated/qbarUW_ht-psf">
-        <description>Effective dynamic pressure at horiz tail</description>
         <product>
-            <property> atmosphere/rho-slugs_ft3 </property>
-            <value> 0.5 </value>
-            <sum>
-                <pow>
-                    <property> aero/velocity/U_ht-fps </property>
-                    <value> 2 </value>
-                </pow>
-                <pow>
-                    <property> aero/velocity/W_ht-fps </property>
-                    <value> 2 </value>
-                </pow>
-            </sum>
+          <value> 1.0 </value>
+          <property> aero/forces/Z_rw0_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <!--8.5-17-->
-    <function name="aero/calculated/alpha_ht-rad">
-        <description>Effective angle of attack at horiz tail</description>
-        <sum>
-            <atan2>
-                <property> aero/velocity/W_ht-fps </property>
-                <property> aero/velocity/U_ht-fps </property>
-            </atan2>
-            <product>
-                <property> aero/quantity/elevator-effectiveness </property>
-                <property> fcs/elevator-pos-rad </property>
-            </product>
-        </sum>
-    </function>
-    <!--Lift and drag of horizontal tail-->
-    <!--"Handled in the same manner as for the wing, with different parameter choices"-->
-    <function name="aero/coefficients/CD-sep_ht">
-        <description>H tail separation drag coefficient</description>
-        <!--increase from zero at stall to flat plate drag coefficient-->
-        <table name="aero/coefficients/CD-sep_ht_alpha">
-            <independentVar lookup="row"> aero/calculated/alpha_ht-rad </independentVar>
-            <tableData> 
--1.57  1
--0.21  0
-0.21   0
-1.57   1
- </tableData>
-        </table>
-    </function>
-    <function name="aero/coefficients/CD_ht">
-        <description>H tail drag coefficient</description>
-        <sum>
-            <property> aero/coefficients/CD0_ht </property>
-            <product>
-                <property> aero/coefficients/k_ht </property>
-                <pow>
-                    <property> aero/coefficients/CL_ht </property>
-                    <value> 2 </value>
-                </pow>
-            </product>
-            <property> aero/coefficients/CD-sep_ht </property>
-        </sum>
-    </function>
-    <function name="aero/forces/L_ht-lb">
-        <description>H tail lift</description>
+    <function name="aero/forces/Z_lw1-lb">
+      <sum>
         <product>
-            <property> aero/coefficients/CL_ht </property>
-            <property> metrics/Sh-sqft </property>
-            <property> aero/calculated/qbarUW_ht-psf </property>
+          <value> 0.0 </value>
+          <property> aero/forces/X_lw1_wf-lb </property>
         </product>
-    </function>
-    <function name="aero/forces/D_ht-lb">
-        <description>H tail drag</description>
         <product>
-            <property> aero/coefficients/CD_ht </property>
-            <property> metrics/Sh-sqft </property>
-            <property> aero/calculated/qbarUW_ht-psf </property>
+          <value> 1.0 </value>
+          <property> aero/forces/Z_lw1_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <!--=========================================================================-->
-    <!--vertical tail calculations-->
-    <!--8.5-18-->
-    <function name="aero/velocity/U_vt-fps">
-        <description>V tail x velocity</description>
-        <sum>
-            <property> velocities/u-aero-fps </property>
-            <product>
-                <property> velocities/q-aero-rad_sec </property>
-                <property> aero/quantity/z_vt-bf-ft </property>
-            </product>
-            <property> aero/velocity/prop-vt-vi-fps </property>
-        </sum>
-    </function>
-    <function name="aero/velocity/V_vt-fps">
-        <description>V tail y velocity</description>
-        <sum>
-            <property> velocities/v-aero-fps </property>
-            <product>
-                <property> velocities/r-aero-rad_sec </property>
-                <property> aero/quantity/x_vt-bf-ft </property>
-            </product>
-            <product>
-                <value> -1.0 </value>
-                <property> velocities/p-aero-rad_sec </property>
-                <property> aero/quantity/z_vt-bf-ft </property>
-            </product>
-        </sum>
-    </function>
-    <function name="aero/velocity/W_vt-fps">
-        <description>V tail z velocity</description>
-        <sum>
-            <property> velocities/w-aero-fps </property>
-            <product>
-                <value> -1.0 </value>
-                <property> velocities/q-aero-rad_sec </property>
-                <property> aero/quantity/x_vt-bf-ft </property>
-            </product>
-        </sum>
-    </function>
-    <!--8.5-19-->
-    <function name="aero/calculated/qbarUV_vt-psf">
-        <description>Vertical tail dynamic pressure</description>
+    <function name="aero/forces/Z_rw1-lb">
+      <sum>
         <product>
-            <property> atmosphere/rho-slugs_ft3 </property>
-            <value> 0.5 </value>
-            <sum>
-                <pow>
-                    <property> aero/velocity/U_vt-fps </property>
-                    <value> 2 </value>
-                </pow>
-                <pow>
-                    <property> aero/velocity/V_vt-fps </property>
-                    <value> 2 </value>
-                </pow>
-            </sum>
+          <value> 0.0 </value>
+          <property> aero/forces/X_rw1_wf-lb </property>
         </product>
-    </function>
-    <!--8.5-20-->
-    <function name="aero/calculated/alpha_vt-rad">
-        <description>Vertical tail angle of attack</description>
-        <sum>
-            <atan2>
-                <property> aero/velocity/V_vt-fps </property>
-                <property> aero/velocity/U_vt-fps </property>
-            </atan2>
-            <product>
-                <property> aero/quantity/rudder-effectiveness </property>
-                <property> fcs/rudder-pos-rad </property>
-            </product>
-        </sum>
-    </function>
-    <!--Calculation of aerodynamic forces-->
-    <function name="aero/coefficients/CD-sep_vt">
-        <description>V tail separation drag coefficient</description>
-        <!--increase from zero at stall to flat plate drag coefficient-->
-        <table name="aero/coefficients/CD-sep_vt_alpha">
-            <independentVar lookup="row"> aero/calculated/alpha_vt-rad </independentVar>
-            <tableData> 
--1.57  1
--0.21  0
-0.21   0
-1.57   1
- </tableData>
-        </table>
-    </function>
-    <function name="aero/coefficients/CD_vt">
-        <description>V tail drag coefficient</description>
-        <sum>
-            <property> aero/coefficients/CD0_vt </property>
-            <product>
-                <property> aero/coefficients/k_vt </property>
-                <pow>
-                    <property> aero/coefficients/CL_vt </property>
-                    <value> 2 </value>
-                </pow>
-            </product>
-            <property> aero/coefficients/CD-sep_vt </property>
-        </sum>
-    </function>
-    <function name="aero/forces/L_vt-lb">
-        <description>V tail lift</description>
         <product>
-            <property> aero/coefficients/CL_vt </property>
-            <property> metrics/Sv-sqft </property>
-            <property> aero/calculated/qbarUV_vt-psf </property>
+          <value> 1.0 </value>
+          <property> aero/forces/Z_rw1_wf-lb </property>
         </product>
+      </sum>
     </function>
-    <function name="aero/forces/D_vt-lb">
-        <description>V tail drag</description>
+    <function name="aero/forces/Z_ht-lb">
+      <sum>
         <product>
-            <property> aero/coefficients/CD_vt </property>
-            <property> metrics/Sv-sqft </property>
-            <property> aero/calculated/qbarUV_vt-psf </property>
+          <value> 0.0 </value>
+          <property> aero/forces/X_ht_wf-lb </property>
         </product>
+        <product>
+          <value> 1.0 </value>
+          <property> aero/forces/Z_ht_wf-lb </property>
+        </product>
+      </sum>
     </function>
-    <!--=========================================================================-->
-    <!--Aerodynamic forces-->
-    <!--forces automatically applied at AERORP-->
-    <!--TODO: move the AERORP to the center of gravity-->
-    <axis name="X" frame="BODY">
-        <!--body x-direction-->
-        <function name="aero/forces/X_rw-lb">
-            <description>Right wing</description>
-            <!--Stevens 8.5-12-->
-            <sum>
-                <product>
-                    <value> 1.0 </value>
-                    <property> aero/forces/L_rw-lb </property>
-                    <sin>
-                        <property> aero/calculated/alpha_rw-rad </property>
-                    </sin>
-                </product>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/D_rw-lb </property>
-                    <cos>
-                        <property> aero/calculated/alpha_rw-rad </property>
-                    </cos>
-                </product>
-            </sum>
-        </function>
-        <function name="aero/forces/X_lw-lb">
-            <description>Left wing</description>
-            <!--Stevens 8.5-12, left wing-->
-            <sum>
-                <product>
-                    <value> 1.0 </value>
-                    <property> aero/forces/L_lw-lb </property>
-                    <sin>
-                        <property> aero/calculated/alpha_lw-rad </property>
-                    </sin>
-                </product>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/D_lw-lb </property>
-                    <cos>
-                        <property> aero/calculated/alpha_lw-rad </property>
-                    </cos>
-                </product>
-            </sum>
-        </function>
-        <!--horizontal tail-->
-        <function name="aero/forces/X_ht-lb">
-            <description>H tail</description>
-            <!--Stevens 8.5-12-->
-            <sum>
-                <product>
-                    <value> 1.0 </value>
-                    <property> aero/forces/L_ht-lb </property>
-                    <sin>
-                        <property> aero/calculated/alpha_ht-rad </property>
-                    </sin>
-                </product>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/D_ht-lb </property>
-                    <cos>
-                        <property> aero/calculated/alpha_ht-rad </property>
-                    </cos>
-                </product>
-            </sum>
-        </function>
-        <!--vertical tail-->
-        <function name="aero/forces/X_vt-lb">
-            <description>V tail</description>
-            <!--Stevens 8.5-12-->
-            <sum>
-                <product>
-                    <value> 1.0 </value>
-                    <property> aero/forces/L_vt-lb </property>
-                    <sin>
-                        <property> aero/calculated/alpha_vt-rad </property>
-                    </sin>
-                </product>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/D_vt-lb </property>
-                    <cos>
-                        <property> aero/calculated/alpha_vt-rad </property>
-                    </cos>
-                </product>
-            </sum>
-        </function>
-        <!--fuselage-->
-        <function name="aero/forces/X_fus-lb">
-            <description>Fuselage</description>
-            <product>
-                <value> -0.5 </value>
-                <property> atmosphere/rho-slugs_ft3 </property>
-                <property> aero/quantity/X_fus-uu-ft2 </property>
-                <abs>
-                    <property> aero/velocity/fus-u-fps </property>
-                </abs>
-                <property> aero/velocity/fus-u-fps </property>
-            </product>
-        </function>
-    </axis>
-    <axis name="Y" frame="BODY">
-        <!--body Y-direction-->
-        <!--no effect from main wings (no dihedral)-->
-        <!--effect from tail and fuselage-->
-        <function name="aero/forces/Y_vt-lb">
-            <description>V tail</description>
-            <!--Stevens 8.5-12-->
-            <sum>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/L_vt-lb </property>
-                    <cos>
-                        <property> aero/calculated/alpha_vt-rad </property>
-                    </cos>
-                </product>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/D_vt-lb </property>
-                    <sin>
-                        <property> aero/calculated/alpha_vt-rad </property>
-                    </sin>
-                </product>
-            </sum>
-        </function>
-        <function name="aero/forces/Y_fus-lb">
-            <description>Fuselage</description>
-            <product>
-                <value> -0.5 </value>
-                <property> atmosphere/rho-slugs_ft3 </property>
-                <property> aero/quantity/Y_fus-vv-ft2 </property>
-                <abs>
-                    <property> velocities/v-aero-fps </property>
-                </abs>
-                <property> velocities/v-aero-fps </property>
-            </product>
-        </function>
-    </axis>
-    <axis name="Z" frame="BODY">
-        <!--body Z-direction-->
-        <function name="aero/forces/Z_rw-lb">
-            <description>Right wing</description>
-            <sum>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/L_rw-lb </property>
-                    <cos>
-                        <property> aero/calculated/alpha_rw-rad </property>
-                    </cos>
-                </product>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/D_rw-lb </property>
-                    <sin>
-                        <property> aero/calculated/alpha_rw-rad </property>
-                    </sin>
-                </product>
-            </sum>
-        </function>
-        <!--left wing-->
-        <function name="aero/forces/Z_lw-lb">
-            <description>Left wing</description>
-            <sum>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/L_lw-lb </property>
-                    <cos>
-                        <property> aero/calculated/alpha_lw-rad </property>
-                    </cos>
-                </product>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/D_lw-lb </property>
-                    <sin>
-                        <property> aero/calculated/alpha_lw-rad </property>
-                    </sin>
-                </product>
-            </sum>
-        </function>
-        <!--horizontal tail-->
-        <function name="aero/forces/Z_ht-lb">
-            <description>H tail</description>
-            <sum>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/L_ht-lb </property>
-                    <cos>
-                        <property> aero/calculated/alpha_ht-rad </property>
-                    </cos>
-                </product>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/forces/D_ht-lb </property>
-                    <sin>
-                        <property> aero/calculated/alpha_ht-rad </property>
-                    </sin>
-                </product>
-            </sum>
-        </function>
-        <function name="aero/forces/Z_fus-lb">
-            <description>Fuselage</description>
-            <product>
-                <value> -0.5 </value>
-                <property> atmosphere/rho-slugs_ft3 </property>
-                <property> aero/quantity/Z_fus-ww-ft2 </property>
-                <abs>
-                    <property> velocities/w-aero-fps </property>
-                </abs>
-                <property> velocities/w-aero-fps </property>
-            </product>
-        </function>
-    </axis>
-    <!--aerodynamic moments-->
-    <axis name="ROLL" frame="BODY">
-        <!--moment about X-axis-->
-        <!--8.5-13, no side forces-->
-        <function name="aero/moments/L_rw-ftlb">
-            <description>Right wing</description>
-            <product>
-                <property> aero/quantity/y_rw-bf-ft </property>
-                <property> aero/forces/Z_rw-lb </property>
-            </product>
-        </function>
-        <function name="aero/moments/L_lw-ftlb">
-            <description>Left wing</description>
-            <product>
-                <property> aero/quantity/y_lw-bf-ft </property>
-                <property> aero/forces/Z_lw-lb </property>
-            </product>
-        </function>
-        <!--h tail causes no roll moment (y_ht = 0, Y_ht = 0)-->
-        <function name="aero/moments/L_vt-ftlb">
-            <description>V tail</description>
-            <product>
-                <value> -1.0 </value>
-                <property> aero/quantity/z_vt-bf-ft </property>
-                <property> aero/forces/Y_vt-lb </property>
-            </product>
-        </function>
-        <function name="aero/moments/L_fus-ftlb">
-            <description>Fuselage</description>
-            <product>
-                <value> -1.0 </value>
-                <property> aero/quantity/z_fus-bf-ft </property>
-                <property> aero/forces/Y_fus-lb </property>
-            </product>
-        </function>
-    </axis>
-    <axis name="PITCH" frame="BODY">
-        <!--moment about Y-axis-->
-        <!--TODO: add moment coefficient-->
-        <function name="aero/moments/M_rw-ftlb">
-            <description>Right wing</description>
-            <sum>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/quantity/x_w-bf-ft </property>
-                    <property> aero/forces/Z_rw-lb </property>
-                </product>
-                <product>
-                    <property> aero/quantity/z_w-bf-ft </property>
-                    <property> aero/forces/X_rw-lb </property>
-                </product>
-            </sum>
-        </function>
-        <!--left wing-->
-        <function name="aero/moments/M_lw-ftlb">
-            <description>Left wing</description>
-            <sum>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/quantity/x_w-bf-ft </property>
-                    <property> aero/forces/Z_lw-lb </property>
-                </product>
-                <product>
-                    <property> aero/quantity/z_w-bf-ft </property>
-                    <property> aero/forces/X_lw-lb </property>
-                </product>
-            </sum>
-        </function>
-        <!--h stab-->
-        <function name="aero/moments/M_ht-ftlb">
-            <description>H tail</description>
-            <sum>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/quantity/x_ht-bf-ft </property>
-                    <property> aero/forces/Z_ht-lb </property>
-                </product>
-                <product>
-                    <property> aero/quantity/z_ht-bf-ft </property>
-                    <property> aero/forces/X_ht-lb </property>
-                </product>
-            </sum>
-        </function>
-        <!--v stab-->
-        <function name="aero/moments/M_vt-ftlb">
-            <description>V tail</description>
-            <product>
-                <property> aero/quantity/z_vt-bf-ft </property>
-                <property> aero/forces/X_vt-lb </property>
-            </product>
-        </function>
-        <!--fuselage-->
-        <function name="aero/moments/M_fus-ftlb">
-            <description>Fuselage</description>
-            <sum>
-                <product>
-                    <value> -1.0 </value>
-                    <property> aero/quantity/x_fus-bf-ft </property>
-                    <property> aero/forces/Z_fus-lb </property>
-                </product>
-                <product>
-                    <property> aero/quantity/z_fus-bf-ft </property>
-                    <property> aero/forces/X_fus-lb </property>
-                </product>
-            </sum>
-        </function>
-    </axis>
-    <axis name="YAW" frame="BODY">
-        <!--moment about Z-axis-->
-        <function name="aero/moments/N_rw-ftlb">
-            <description>Right wing</description>
-            <product>
-                <value> -1.0 </value>
-                <property> aero/quantity/y_rw-bf-ft </property>
-                <property> aero/forces/X_rw-lb </property>
-            </product>
-        </function>
-        <!--left wing-->
-        <function name="aero/moments/N_lw-ftlb">
-            <description>Left wing</description>
-            <product>
-                <value> -1.0 </value>
-                <property> aero/quantity/y_lw-bf-ft </property>
-                <property> aero/forces/X_lw-lb </property>
-            </product>
-        </function>
-        <!--h tail causes no yaw moment (y = 0, Y = 0)-->
-        <!--v tail-->
-        <function name="aero/moments/N_vt-ftlb">
-            <description>V tail</description>
-            <product>
-                <property> aero/quantity/x_vt-bf-ft </property>
-                <property> aero/forces/Y_vt-lb </property>
-            </product>
-        </function>
-        <!--fuselage-->
-        <function name="aero/moments/N_fus-ftlb">
-            <description>Fuselage</description>
-            <product>
-                <property> aero/quantity/x_fus-bf-ft </property>
-                <property> aero/forces/Y_fus-lb </property>
-            </product>
-        </function>
-    </axis>
+    <function name="aero/forces/Z_vt-lb">
+      <sum>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/X_vt_wf-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_vt_wf-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/forces/Z_fus-lb">
+      <product>
+        <value> -0.5 </value>
+        <property> atmosphere/rho-slugs_ft3 </property>
+        <value> 2 </value>
+        <abs>
+          <property> velocities/w-aero-fps </property>
+        </abs>
+        <property> velocities/w-aero-fps </property>
+      </product>
+    </function>
+  </axis>
+  <axis name="ROLL" frame="BODY">
+    <function name="aero/moments/L_lw0-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/z_lw0-ft </property>
+          <property> aero/forces/Y_lw0-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/y_lw0-ft </property>
+          <property> aero/forces/Z_lw0-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/L_rw0-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/z_rw0-ft </property>
+          <property> aero/forces/Y_rw0-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/y_rw0-ft </property>
+          <property> aero/forces/Z_rw0-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/L_lw1-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/z_lw1-ft </property>
+          <property> aero/forces/Y_lw1-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/y_lw1-ft </property>
+          <property> aero/forces/Z_lw1-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/L_rw1-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/z_rw1-ft </property>
+          <property> aero/forces/Y_rw1-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/y_rw1-ft </property>
+          <property> aero/forces/Z_rw1-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/L_ht-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/z_ht-ft </property>
+          <property> aero/forces/Y_ht-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/y_ht-ft </property>
+          <property> aero/forces/Z_ht-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/L_vt-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/z_vt-ft </property>
+          <property> aero/forces/Y_vt-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/y_vt-ft </property>
+          <property> aero/forces/Z_vt-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/L_fus-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <value> 0.0 </value>
+          <property> aero/forces/Y_fus-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_fus-lb </property>
+        </product>
+      </sum>
+    </function>
+  </axis>
+  <axis name="PITCH" frame="BODY">
+    <function name="aero/moments/M_lw0-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/x_lw0-ft </property>
+          <property> aero/forces/Z_lw0-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/z_lw0-ft </property>
+          <property> aero/forces/X_lw0-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/M_rw0-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/x_rw0-ft </property>
+          <property> aero/forces/Z_rw0-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/z_rw0-ft </property>
+          <property> aero/forces/X_rw0-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/M_lw1-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/x_lw1-ft </property>
+          <property> aero/forces/Z_lw1-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/z_lw1-ft </property>
+          <property> aero/forces/X_lw1-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/M_rw1-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/x_rw1-ft </property>
+          <property> aero/forces/Z_rw1-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/z_rw1-ft </property>
+          <property> aero/forces/X_rw1-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/M_ht-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/x_ht-ft </property>
+          <property> aero/forces/Z_ht-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/z_ht-ft </property>
+          <property> aero/forces/X_ht-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/M_vt-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/x_vt-ft </property>
+          <property> aero/forces/Z_vt-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/z_vt-ft </property>
+          <property> aero/forces/X_vt-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/M_fus-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <value> 0.0 </value>
+          <property> aero/forces/Z_fus-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/X_fus-lb </property>
+        </product>
+      </sum>
+    </function>
+  </axis>
+  <axis name="YAW" frame="BODY">
+    <function name="aero/moments/N_lw0-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/y_lw0-ft </property>
+          <property> aero/forces/X_lw0-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/x_lw0-ft </property>
+          <property> aero/forces/Y_lw0-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/N_rw0-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/y_rw0-ft </property>
+          <property> aero/forces/X_rw0-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/x_rw0-ft </property>
+          <property> aero/forces/Y_rw0-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/N_lw1-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/y_lw1-ft </property>
+          <property> aero/forces/X_lw1-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/x_lw1-ft </property>
+          <property> aero/forces/Y_lw1-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/N_rw1-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/y_rw1-ft </property>
+          <property> aero/forces/X_rw1-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/x_rw1-ft </property>
+          <property> aero/forces/Y_rw1-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/N_ht-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/y_ht-ft </property>
+          <property> aero/forces/X_ht-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/x_ht-ft </property>
+          <property> aero/forces/Y_ht-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/N_vt-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <property> aero/quantity/y_vt-ft </property>
+          <property> aero/forces/X_vt-lb </property>
+        </product>
+        <product>
+          <property> aero/quantity/x_vt-ft </property>
+          <property> aero/forces/Y_vt-lb </property>
+        </product>
+      </sum>
+    </function>
+    <function name="aero/moments/N_fus-ftlb">
+      <sum>
+        <product>
+          <value> -1.0 </value>
+          <value> 0.0 </value>
+          <property> aero/forces/X_fus-lb </property>
+        </product>
+        <product>
+          <value> 0.0 </value>
+          <property> aero/forces/Y_fus-lb </property>
+        </product>
+      </sum>
+    </function>
+  </axis>
 </aerodynamics>
