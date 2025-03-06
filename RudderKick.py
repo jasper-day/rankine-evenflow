@@ -29,12 +29,11 @@ import math
 import pandas as pd
 import seaborn as sns
 import numpy as np
-from tabulate import tabulate
 
 # Global variables that must be modified to match your particular need
 # The aircraft name
 # Note - It should match the exact spelling of the model file
-AIRCRAFT_NAME = "EvenFlow"
+AIRCRAFT_NAME = "YardStik"
 # Path to JSBSim files, location of the folders "aircraft", "engines" and "systems"
 PATH_TO_JSBSIM_FILES = "."
 
@@ -42,6 +41,7 @@ PATH_TO_JSBSIM_FILES = "."
 jsbsim.FGJSBBase().debug_lvl = 0
 
 fdm = jsbsim.FGFDMExec(PATH_TO_JSBSIM_FILES)
+pm = fdm.get_property_manager()
 
 # Load the aircraft model
 fdm.load_model(AIRCRAFT_NAME)
@@ -50,12 +50,13 @@ fdm.load_model(AIRCRAFT_NAME)
 fdm["aero/alpha-max-rad"] = math.radians(15)
 fdm["aero/alpha-min-rad"] = math.radians(-5.0)
 
-fdm.set_dt(1e-3)
+fdm.set_dt(1e-2)
 dt = fdm.get_delta_t()
+print("dt:", dt)
 
 # Max control deflection
-aileronMax = 0.3
-rudderMax = 0.2
+aileronMax = 0.0
+rudderMax = 0.0
 
 # Number of seconds for control surface to reach max deflection
 risetime = 4
@@ -67,12 +68,13 @@ diRudder = rudderMax / (risetime / dt)
 
 # Initial conditions
 fdm["ic/h-sl-ft"] = 1000
-fdm["ic/vc-kts"] = 30
+fdm["ic/vc-kts"] = 20
 fdm["ic/gamma-deg"] = 0
 fdm["ic/beta-deg"] = 0
 
 # Initialize the aircraft with initial conditions
-fdm["propulsion/engine/set-running"] = 1
+fdm["propulsion/engine[0]/set-running"] = 1
+fdm["propulsion/engine[1]/set-running"] = 1
 fdm.run_ic()
 
 # # Set engines running
@@ -81,25 +83,9 @@ fdm.run_ic()
 # propulsion = fdm.get_propulsion()
 # propulsion.get_engine(0).init_running()  # start the engine
 # propulsion.get_steady_state()  # set it to the correct value
-# for alpha in range(0,15,3):
-#     print("alpha", alpha)
-#     fdm["aero/alpha-deg"] = alpha
-#     fdm.run()
-#     print("Aerodynamic forces")
-#     forces = [
-#         ["x", fdm["forces/fbx-aero-lbs"]],
-#         ["y", fdm["forces/fby-aero-lbs"]],
-#         ["z", fdm["forces/fbz-aero-lbs"]]
-#         ]
-#     print(tabulate(forces, tablefmt="plain"))
-#     print("Accelerations")
-#     accelerations = [
-#         ["x", fdm["accelerations/udot-ft_sec2"]],
-#         ["y", fdm["accelerations/vdot-ft_sec2"]],
-#         ["z", fdm["accelerations/wdot-ft_sec2"]],
-#         ]
-#     print(tabulate(accelerations, tablefmt="plain"))
-#     print("-"*10)
+
+
+print("throttle", fdm["fcs/throttle-cmd-norm"])
 
 jsbsim.FGJSBBase().debug_lvl = 1
 # Trim
@@ -111,21 +97,21 @@ except jsbsim.TrimFailureError:
 
     pass  # Ignore trim failure
 
-# linearization = jsbsim.FGLinearization(fdm)
-# A = linearization.system_matrix
-# evals, evecs = np.linalg.eig(A)
-# print("eigenvalues", evals)
-# # print("eigenvectors", evecs)
+linearization = jsbsim.FGLinearization(fdm)
+A = linearization.system_matrix
+evals, evecs = np.linalg.eig(A)
+print("eigenvalues", evals)
+# print("eigenvectors", evecs)
 # plt.scatter(np.real(evals), np.imag(evals))
 # plt.axhline(0)
 # plt.axvline(0)
 # plt.grid()
 # plt.show()
-# plt.matshow(A)
-# plt.show()
+plt.spy(A, precision=1e-3)
+plt.show()
 
 # # Time to run for in seconds
-run_period = 20
+# run_period = 20
 
 # # fdm.enable_output()
 # # fdm.hold()
@@ -133,84 +119,80 @@ run_period = 20
 # #     fdm.run()
 # #     fdm.hold()
 # #     time.sleep(0.1)
-# Recorded data
-results = []
+# # Recorded data
+# results = dict(
+#     times=[],
+#     betas=[],
+#     bankAngle=[],
+#     ailerons=[],
+#     rudder=[],
+#     alphas=[],
+#     hsl=[],
+#     thrust=[],
+#     x=[],
+#     y=[],
+#     vc=[],
+# )
 
-for i in range(int(run_period / dt)):
-    fdm.run()
+# for i in range(int(run_period / dt)):
+#     fdm.run()
 
-    results.append([fdm.get_sim_time(),
-        fdm["aero/beta-deg"],
-        fdm["attitude/phi-deg"],
-        fdm["fcs/aileron-cmd-norm"],
-        fdm["fcs/rudder-cmd-norm"],
-        fdm["aero/alpha-deg"],
-        fdm["position/h-sl-ft"],
-        fdm["propulsion/engine[0]/thrust-lbs"],
-        fdm["position/distance-from-start-lat-mt"],
-        fdm["position/distance-from-start-lon-mt"],
-        fdm["velocities/vc-kts"],
-        fdm["aero/coefficients/CL_lw"] + fdm["aero/coefficients/CL_rw"],
-        fdm["aero/coefficients/CL_ht"],
-        fdm["aero/coefficients/CL_vt"],
-        fdm["forces/fbx-aero-lbs"],
-        fdm["forces/fby-aero-lbs"],
-        fdm["forces/fbz-aero-lbs"],
-    ])
+#     results["times"].append(fdm.get_sim_time())
 
-    aileronCmd = fdm["fcs/aileron-cmd-norm"]
-    rudderCmd = fdm["fcs/rudder-cmd-norm"]
+#     results["betas"].append(fdm["aero/beta-deg"])
+#     results["bankAngle"].append(fdm["attitude/phi-deg"])
+#     results["ailerons"].append(fdm["fcs/aileron-cmd-norm"])
+#     results["rudder"].append(fdm["fcs/rudder-cmd-norm"])
+#     results["alphas"].append(fdm["aero/alpha-deg"])
+#     results["hsl"].append(fdm["position/h-sl-ft"])
+#     results["thrust"].append(fdm["propulsion/engine[0]/thrust-lbs"])
+#     results["x"].append(fdm["position/distance-from-start-lat-mt"])
+#     results["y"].append(fdm["position/distance-from-start-lon-mt"])
+#     results["vc"].append(fdm["velocities/vc-kts"])
 
-    if aileronCmd < aileronMax:
-        aileronCmd += diAileron
-        fdm["fcs/aileron-cmd-norm"] = aileronCmd
+#     aileronCmd = fdm["fcs/aileron-cmd-norm"]
+#     rudderCmd = fdm["fcs/rudder-cmd-norm"]
 
-    if rudderCmd < rudderMax:
-        rudderCmd += diRudder
-        fdm["fcs/rudder-cmd-norm"] = rudderCmd
-    
-    if fdm["position/h-sl-ft"] < 10:
-        break
+#     if aileronCmd < aileronMax:
+#         aileronCmd += diAileron
+#         fdm["fcs/aileron-cmd-norm"] = aileronCmd
 
-# Plot results
-df = pd.DataFrame(results, columns=[
-    "times",
-    "betas", "phi", "aileron", "rudder", "alphas", 
-    "height", "thrust",
-    "x", "y", "vc", "CL_w", "CL_ht", "CL_vt",
-    "fx", "fy", "fz"
-])
+#     if rudderCmd < rudderMax:
+#         rudderCmd += diRudder
+#         fdm["fcs/rudder-cmd-norm"] = rudderCmd
 
+# # Plot results
+# df = pd.DataFrame(results)
 
-sns.set_style(style="whitegrid")
-plt.subplot(321)
-sns.lineplot(df, x="times", y="betas", label="beta")
-sns.lineplot(df, x="times", y="alphas", label="alpha")
-plt.subplot(322)
-sns.lineplot(df, x="times", y="height")
-plt.subplot(323)
-sns.lineplot(df, x="times", y="rudder", label="rudder")
-sns.lineplot(df, x="times", y="aileron", label="aileron")
-plt.subplot(324)
-sns.lineplot(df, x="times", y="vc")
-plt.subplot(325)
-sns.lineplot(df, x="times", y="CL_w")
-plt.subplot(326)
-sns.lineplot(df, x="times", y="CL_ht", label="H tail")
-sns.lineplot(df, x="times", y="CL_vt", label="V tail")
+# ax1 = plt.subplot(211)
+# ax1.set_xlabel("Time (s)")
+# ax1.set_ylabel("deg")
+# sns.set_style(style="whitegrid")
+# sns.lineplot(df, x="times", y="betas", label="Beta", color="red", ax=ax1)
+# sns.lineplot(df, x="times", y="alphas", ax=ax1, label="alphas")
+# plt.legend(loc="lower left")
 
+# ax2 = ax1.twinx()
 
-plt.title("Rudder Kick")
+# sns.lineplot(df, x="times", y="hsl", ax=ax2, label="height", color="C4")
 
-plt.tight_layout()
-plt.show()
+# ax3 = plt.subplot(212)
+# sns.lineplot(x=df.times[2:], y=df.thrust[2:], ax=ax3)
 
-# ax3d = plt.figure().add_subplot(projection="3d")
+# ax4 = ax3.twinx()
+# sns.lineplot(df, x="times", y="vc", color="C1")
 
-# ax3d.plot(df.x, df.y, df.hsl)
-# ax3d.set_aspect("equal")
-# ax3d.set_xlabel("X")
-# ax3d.set_ylabel("Y")
-# ax3d.set_zlabel("Z")
+# plt.title("Rudder Kick")
 
+# plt.tight_layout()
 # plt.show()
+
+# # ax3d = plt.figure().add_subplot(projection="3d")
+
+# # ax3d.plot(df.x, df.y, df.hsl)
+# # ax3d.set_aspect("equal")
+# # ax3d.set_xlabel("X")
+# # ax3d.set_ylabel("Y")
+# # ax3d.set_zlabel("Z")
+
+# # plt.show()
